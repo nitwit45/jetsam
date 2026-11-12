@@ -1,5 +1,9 @@
 # Jetsam
 
+<a href="https://github.com/nitwit45/jetsam/releases/latest">
+  <img src="docs/img/banner.png" width="100%" alt="Jetsam: the Mac cleaner that previews every delete. The Overview screen with sample data shows 112 GB free of 994 GB and 36.3 GB that a Standard clean would free.">
+</a>
+
 Jetsam is a macOS disk and memory cleaner for developers. It removes files your tools can regenerate (node_modules, build output, package caches, stale git worktrees) in four modes from Light to Full. In the app, every path is listed with its size before it can be removed, and files go to the Trash by default. It also lists big files you have not opened in months, and finds memory held by orphaned helpers, leaking processes and headless browsers that coding agents left behind. It never ends a running Claude Code agent or the terminal or editor it runs in.
 
 macOS 13 or later, tested on Apple silicon only. Version 0.1, not signed or notarized: see [Opening an unsigned build](#opening-an-unsigned-build).
