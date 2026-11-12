@@ -23,8 +23,9 @@ Download [Jetsam.dmg](https://github.com/nitwit45/jetsam/releases/latest/downloa
 
 ```sh
 shasum -a 256 -c Jetsam.dmg.sha256
-gh attestation verify Jetsam.dmg --repo nitwit45/jetsam
 ```
+
+I built 0.1.0 on my own Mac, not in the release workflow, so it has a checksum but no build attestation.
 
 ### Opening an unsigned build
 
