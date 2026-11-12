@@ -1,0 +1,83 @@
+name: Bug
+description: Something does not work as the README or docs say
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        If Jetsam removed or ended something it should not have, use the "Jetsam removed or ended something" form instead.
+
+        These are not bugs:
+
+        - **Freed space does not show in Finder.** Trashed files use space until you empty the Trash, and APFS can hold space in local snapshots. See the [FAQ](https://github.com/nitwit45/jetsam/blob/main/docs/FAQ.md#i-cleaned-20-gb-but-finder-shows-no-new-free-space).
+        - **node_modules came back.** Your tools regenerate what Jetsam removes. See the [FAQ](https://github.com/nitwit45/jetsam/blob/main/docs/FAQ.md#node_modules-came-back).
+        - **"Apple could not verify Jetsam" on first launch.** The build is not signed. See [Opening an unsigned build](https://github.com/nitwit45/jetsam#opening-an-unsigned-build).
+  - type: checkboxes
+    id: different
+    attributes:
+      label: Not one of the above
+      options:
+        - label: I have a different issue, and I searched the existing issues first.
+          required: true
+  - type: input
+    id: version
+    attributes:
+      label: Jetsam version
+      description: Settings > Version.
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: macOS 26.3
+    validations:
+      required: true
+  - type: input
+    id: chip
+    attributes:
+      label: Chip
+      placeholder: M4
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Mode used
+      options:
+        - Light
+        - Standard
+        - Deep
+        - Full
+        - Not a clean (Aged Files, Memory, Freshen, Settings)
+    validations:
+      required: true
+  - type: dropdown
+    id: fda
+    attributes:
+      label: Full Disk Access
+      description: Settings > Full Disk Access shows On or Off.
+      options:
+        - "On"
+        - "Off"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Log excerpt
+      description: For a clean, the matching lines from `~/Library/Application Support/Jetsam/ops.log`. For a scheduled run, `~/Library/Logs/Jetsam/weekly.log`. Remove any paths you do not want public.
+      render: text

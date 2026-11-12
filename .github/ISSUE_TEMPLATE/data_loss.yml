@@ -1,0 +1,71 @@
+name: Jetsam removed or ended something it should not have
+description: A file, folder or process was removed or ended that the rules say should have been left alone
+labels: [data-loss, priority]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is the report that matters most. Thank you for filing it.
+
+        If the item went to the Trash, it may still be there: try **Undo** right after the clean, or Finder's **Put Back**. If the details are sensitive, report it privately instead through **Security > Report a vulnerability** on this repository.
+  - type: input
+    id: version
+    attributes:
+      label: Jetsam version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version and chip
+      placeholder: macOS 26.3, M4
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where it happened
+      options:
+        - Clean, Light
+        - Clean, Standard
+        - Clean, Deep
+        - Clean, Full
+        - Aged Files
+        - Memory, Reclaim now
+        - Memory, End selected
+        - Memory, soft restart
+        - Weekly clean or --headless
+    validations:
+      required: true
+  - type: dropdown
+    id: destination
+    attributes:
+      label: Trash or permanent
+      options:
+        - Moved to the Trash
+        - Deleted permanently
+        - A brew or docker command
+        - A process was ended
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What was removed or ended, and why it should not have been
+      description: The path or process name, and what it was (a git-tracked file, a worktree with unmerged work, a Docker volume, a running agent, your own folder named like a build folder).
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Ops log lines
+      description: The matching lines from `~/Library/Application Support/Jetsam/ops.log`. For a process, the Reclaim result lines.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything around it
+      description: For a build folder, whether the parent has a `package.json`, `Cargo.toml` or other project file, and whether it is inside a git repository. For a worktree, the output of `git status --porcelain --ignored` and `git log main..HEAD` if you still have it.

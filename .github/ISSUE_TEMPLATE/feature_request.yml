@@ -1,0 +1,25 @@
+name: Feature or new cleaning rule
+description: Something Jetsam should clean, show or do
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A new cleaning rule needs three answers: where the files live, which tool regenerates them, and how Jetsam can tell them apart from someone's own data. Rules that match on a folder name alone are not accepted.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to clean or see
+      description: For a rule, the tool that creates the files and the exact paths, with a sample `du -sh` of them.
+    validations:
+      required: true
+  - type: textarea
+    id: regenerate
+    attributes:
+      label: How it comes back
+      description: The command that regenerates it, and what is lost if it is removed by mistake.
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behaviour
+      description: Which mode it belongs in, and whether it should be preselected or marked for review.

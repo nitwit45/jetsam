@@ -1,0 +1,8 @@
+dist
+src-tauri
+node_modules
+bun.lock
+docs
+*.md
+.github
+icons

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Jetsam",
+  "version": "0.1.0",
+  "identifier": "dev.nith.jetsam",
+  "build": {
+    "beforeDevCommand": "bun run dev",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "bun run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "macOSPrivateApi": false,
+    "windows": [
+      {
+        "title": "Jetsam",
+        "width": 1180,
+        "height": 760,
+        "minWidth": 960,
+        "minHeight": 640,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "resizable": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' ipc: http://ipc.localhost"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "dmg"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico",
+      "icons/icon.png"
+    ],
+    "macOS": {
+      "minimumSystemVersion": "13.0",
+      "signingIdentity": "-"
+    },
+    "category": "Utility",
+    "shortDescription": "Disk and memory cleaner for developers",
+    "longDescription": "Jetsam finds the regenerable junk a development Mac accumulates (package caches, node_modules, build outputs, stale worktrees, simulator data, logs) and removes it with a preview first and the Trash by default. It also watches memory pressure and reclaims RAM from leaked helpers and headless browsers without touching what you are working on.",
+    "copyright": "Copyright (c) 2026 Nithila Ariyapperuma. MIT License."
+  }
+}

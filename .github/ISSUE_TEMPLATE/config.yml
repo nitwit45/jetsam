@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask a question
+    url: https://github.com/nitwit45/jetsam/discussions
+    about: Questions and ideas go to Discussions.
+  - name: FAQ
+    url: https://github.com/nitwit45/jetsam/blob/main/docs/FAQ.md
+    about: Freed space not showing, node_modules coming back, Full Disk Access, network use.
+  - name: Search existing issues
+    url: https://github.com/nitwit45/jetsam/issues?q=is%3Aissue
+    about: Someone may have reported it already.

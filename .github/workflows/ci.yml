@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_call:
+
+# Least privilege: every job only reads the repository. Nothing here writes to it, comments
+# on PRs or publishes anything, so a compromised step cannot either.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Pinned to the bun that wrote bun.lock. Bump it in the same PR that regenerates the lockfile,
+      # or `--frozen-lockfile` fails on an unchanged repo.
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.3.13
+
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: stable
+          components: clippy, rustfmt
+
+      - uses: swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: src-tauri
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Install frontend deps
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: bun run tsc --noEmit
+
+      - name: Lint
+        run: bun run lint
+
+      # Also produces dist/, which the Rust crate embeds at compile time.
+      - name: Build frontend
+        run: bun run build
+
+      - name: cargo fmt
+        working-directory: src-tauri
+        run: cargo fmt --check
+
+      - name: cargo clippy
+        working-directory: src-tauri
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: cargo test
+        working-directory: src-tauri
+        run: cargo test
+
+  # The full universal DMG on every PR, so packaging breaks show up before a tag does.
+  # Skipped when release.yml calls this workflow on a tag: the release job builds the bundle itself.
+  bundle:
+    if: github.ref_type != 'tag'
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.3.13
+
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: stable
+          targets: aarch64-apple-darwin, x86_64-apple-darwin
+
+      - uses: swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: src-tauri
+          key: universal
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Install frontend deps
+        run: bun install --frozen-lockfile
+
+      - name: Build Jetsam.app and the DMG
+        run: bun run tauri build --target universal-apple-darwin --bundles dmg
+
+  # The single required check for branch protection: fails if any job above failed or was cancelled.
+  all-jobs:
+    if: always()
+    needs: [check, bundle]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every job passed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          for result in $RESULTS; do
+            case "$result" in
+              success | skipped) ;;
+              *)
+                echo "::error::a required job ended with: $result"
+                exit 1
+                ;;
+            esac
+          done

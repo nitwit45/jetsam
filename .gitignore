@@ -1,0 +1,14 @@
+# Build output
+node_modules/
+dist/
+src-tauri/target/
+src-tauri/gen/schemas/
+
+# macOS
+.DS_Store
+
+# Local agent and handoff notes stay out of the repo
+CLAUDE.md
+AGENTS.md
+HANDOFF.md
+.claude/
