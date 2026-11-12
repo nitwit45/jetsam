@@ -6,6 +6,7 @@ on:
   pull_request:
     branches: [main]
   workflow_call:
+  workflow_dispatch:
 
 # Least privilege: every job only reads the repository. Nothing here writes to it, comments
 # on PRs or publishes anything, so a compromised step cannot either.
