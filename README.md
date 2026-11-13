@@ -6,7 +6,7 @@
 
 Jetsam is a macOS disk and memory cleaner for developers. It removes files your tools can regenerate (node_modules, build output, package caches, stale git worktrees) in four modes from Light to Full. In the app, every path is listed with its size before it can be removed, and files go to the Trash by default. It also lists big files you have not opened in months, and finds memory held by orphaned helpers, leaking processes and headless browsers that coding agents left behind. It never ends a running Claude Code agent or the terminal or editor it runs in.
 
-macOS 13 or later, tested on Apple silicon only. Version 0.1, not signed or notarized: see [Opening an unsigned build](#opening-an-unsigned-build).
+macOS 13 or later. The DMG is universal, but Jetsam is tested on Apple silicon only: the Intel half has only been run under Rosetta. Version 0.1, not signed or notarized: see [Opening an unsigned build](#opening-an-unsigned-build).
 
 <a href="https://github.com/nitwit45/jetsam/releases/latest">
   <picture>
@@ -23,9 +23,10 @@ Download [Jetsam.dmg](https://github.com/nitwit45/jetsam/releases/latest/downloa
 
 ```sh
 shasum -a 256 -c Jetsam.dmg.sha256
+gh release verify-asset Jetsam.dmg --repo nitwit45/jetsam
 ```
 
-I built 0.1.0 on my own Mac, not in the release workflow, so it has a checksum but no build attestation.
+The second command needs [GitHub CLI](https://cli.github.com) 2.81 or later. It checks the file against GitHub's signed record of the release. Releases here are immutable: once one is published, its files and its tag cannot be changed. I built 0.1.0 on my own Mac, not in the release workflow, so it has no build provenance attestation.
 
 ### Opening an unsigned build
 

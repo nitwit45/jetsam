@@ -26,9 +26,47 @@ How a version goes out. The workflow is `.github/workflows/release.yml`; if this
    ```
 
 7. Install it on a second macOS user account by following the README's "Opening an unsigned build" steps exactly. Open Jetsam, run a Light scan and check the preview.
-8. Publish the draft. Nothing is published without this manual step.
+8. Publish the draft. Nothing is published without this manual step. Releases in this repository are immutable: after publishing, the assets and the tag cannot be changed, and a deleted tag cannot be used again. A mistake means a new version.
+9. Check the published release from a clean folder:
+
+   ```sh
+   gh release download --repo nitwit45/jetsam --pattern 'Jetsam.dmg*'
+   shasum -a 256 -c Jetsam.dmg.sha256
+   gh release verify-asset Jetsam.dmg --repo nitwit45/jetsam
+   ```
 
 `Jetsam.dmg` keeps the same name in every release, so `releases/latest/download/Jetsam.dmg` in the README always points at the newest one.
+
+## Releasing without the workflow
+
+0.1.0 was released this way, from one Mac. The result has a checksum and GitHub's release attestation, but no build provenance attestation, and the notes have to say so.
+
+1. Do steps 1 to 3 with the Release workflow disabled (`gh workflow disable release.yml`), so the tag does not start it.
+2. Run the checks in [building.md](building.md#checks). Then build with your home folder remapped, or the binary carries your account name in the source paths of its panic messages:
+
+   ```sh
+   RUSTFLAGS="--remap-path-prefix=$HOME=/home --remap-path-prefix=$PWD=/jetsam --remap-path-prefix=$HOME/.rustup=/rustup --remap-path-prefix=$HOME/.cargo=/cargo" \
+     bun run tauri build --target universal-apple-darwin --bundles dmg
+   ```
+
+   When two prefixes match, the later one wins, so the general one comes first.
+3. Copy the DMG to `Jetsam.dmg` in an empty folder outside the repository. Write the checksum and confirm that no local path is left in the binary:
+
+   ```sh
+   shasum -a 256 Jetsam.dmg > Jetsam.dmg.sha256
+   hdiutil attach -nobrowse -readonly Jetsam.dmg
+   strings -a /Volumes/Jetsam/Jetsam.app/Contents/MacOS/jetsam | grep -c /Users/
+   hdiutil detach /Volumes/Jetsam
+   ```
+
+   The count must be 0. Run the app from the mounted image once, and run `jetsam --headless --dry-run` natively and under `arch -x86_64`.
+4. Write `notes.md` the way the workflow does: the CHANGELOG section, then the install block with the SHA-256 table. Leave out `gh attestation verify` and say the build was local.
+5. Create the draft, then follow steps 5 to 9:
+
+   ```sh
+   gh release create v0.1.0 --draft --verify-tag --title "Jetsam 0.1.0" \
+     --notes-file notes.md Jetsam.dmg Jetsam.dmg.sha256
+   ```
 
 ## Changelog sections
 
