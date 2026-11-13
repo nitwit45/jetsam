@@ -4,7 +4,7 @@ All notable changes to Jetsam. The format follows [Keep a Changelog](https://kee
 
 ## Unreleased
 
-## 0.1.0 - 2026-11-12
+## 0.1.0 - 2026-11-13
 
 First public release: four clean modes with a preview, Aged Files, and memory triage.
 
