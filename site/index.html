@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Jetsam: a Mac cleaner for developers that previews every delete</title>
+    <meta
+      name="description"
+      content="Jetsam removes what your tools can regenerate: node_modules, build output, package caches and stale git worktrees. Every path is listed before it can be removed, and files go to the Trash."
+    />
+    <meta property="og:title" content="Jetsam" />
+    <meta
+      property="og:description"
+      content="A Mac cleaner for developers that previews every delete. Free and open source."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://nitwit45.github.io/jetsam/" />
+    <meta property="og:image" content="https://nitwit45.github.io/jetsam/img/banner.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="top">
+        <a class="brand" href="./"><img src="icon.svg" alt="" />Jetsam</a>
+        <nav>
+          <a class="hide" href="https://github.com/nitwit45/jetsam/blob/main/docs/modes.md">What each mode removes</a>
+          <a class="hide" href="https://github.com/nitwit45/jetsam/blob/main/docs/safety.md">Safety review</a>
+          <a href="https://github.com/nitwit45/jetsam">GitHub</a>
+        </nav>
+      </header>
+
+      <main>
+        <div class="hero">
+          <h1>The Mac cleaner that previews every delete.</h1>
+          <p class="lede">
+            Jetsam removes what your tools can regenerate: node_modules, build output, package caches, stale git
+            worktrees. Every path is listed with its size before it can be removed, and files go to the Trash.
+          </p>
+          <div class="get">
+            <a class="button" href="https://github.com/nitwit45/jetsam/releases/latest/download/Jetsam.dmg"
+              >Download for macOS</a
+            >
+            <span class="brew">
+              <code id="brew">brew install --cask nitwit45/tap/jetsam</code>
+              <button type="button" id="copy" aria-label="Copy the Homebrew command">Copy</button>
+            </span>
+          </div>
+          <p class="fine">
+            Free, MIT licensed. macOS 13 or later, Apple silicon and Intel. Not notarized:
+            <a href="https://github.com/nitwit45/jetsam#opening-an-unsigned-build"
+              >what that means for the first launch</a
+            >.
+          </p>
+        </div>
+
+        <figure class="hero-shot" style="margin-left: 0; margin-right: 0">
+          <div class="shot">
+            <picture>
+              <source media="(prefers-color-scheme: dark)" srcset="img/clean-dark.png" />
+              <img
+                src="img/clean-light.png"
+                width="2360"
+                height="1520"
+                alt="Jetsam's Clean screen: 22 items and 36.3 GB selected in Standard mode, each cache folder listed with its path, age and size, one marked size only and unticked."
+              />
+            </picture>
+          </div>
+          <figcaption class="caption">The Clean screen. Every screenshot on this page shows sample data.</figcaption>
+        </figure>
+
+        <section id="modes">
+          <div class="text">
+            <h2>Pick how far it reaches</h2>
+            <p>
+              Choose a mode and scan. Overview shows what a clean would free, by category, and nothing is removed until
+              you have been through the list.
+            </p>
+            <p>
+              Each mode includes the ones before it. The first two stay out of your projects. Deep and Full go into
+              them, and only for folders a build can recreate.
+            </p>
+          </div>
+          <div class="shot wide">
+            <picture>
+              <source media="(prefers-color-scheme: dark)" srcset="img/overview-dark.png" />
+              <img
+                src="img/overview-light.png"
+                width="2360"
+                height="1520"
+                loading="lazy"
+                alt="Jetsam's Overview screen: 112 GB free of 994 GB, 36.3 GB a Standard clean would free, and a block per category."
+              />
+            </picture>
+          </div>
+          <dl class="modes">
+            <div>
+              <dt>Light</dt>
+              <dd>
+                App caches and logs, <code>.dmg</code> and <code>.pkg</code> installers in Downloads older than 14 days,
+                Homebrew cleanup, Docker dangling images and build cache.
+              </dd>
+            </div>
+            <div>
+              <dt>Standard</dt>
+              <dd>
+                Package manager caches (npm, pnpm, bun, pip, cargo, Gradle, Playwright), Xcode derived data and old
+                device support, unused Android virtual devices.
+              </dd>
+            </div>
+            <div>
+              <dt>Deep</dt>
+              <dd>
+                Build folders in projects with no commit for 14 days, stale merged worktrees, unused Docker images, and
+                AI session logs older than 45 days, which are listed for you to review.
+              </dd>
+            </div>
+            <div>
+              <dt>Full</dt>
+              <dd>Build folders in the projects you are working on now. Nothing git tracks is touched.</dd>
+            </div>
+          </dl>
+          <p class="caption">
+            Every path and rule is in
+            <a href="https://github.com/nitwit45/jetsam/blob/main/docs/modes.md">docs/modes.md</a>.
+          </p>
+        </section>
+
+        <section id="aged">
+          <div class="text">
+            <h2>Big files you stopped opening</h2>
+            <p>
+              Aged Files lists files of 250 MB or more that you have not opened in 90 days, largest first, by
+              Spotlight's last-used date. Both numbers are adjustable.
+            </p>
+            <p>Nothing here is selected for you. Reveal a row in Finder to see what it is, or move it to the Trash.</p>
+          </div>
+          <div class="shot wide">
+            <picture>
+              <source media="(prefers-color-scheme: dark)" srcset="img/aged-dark.png" />
+              <img
+                src="img/aged-light.png"
+                width="2360"
+                height="1520"
+                loading="lazy"
+                alt="Jetsam's Aged Files screen: eight files over 250 MB, 21.3 GB in total, with when each was last opened."
+              />
+            </picture>
+          </div>
+        </section>
+
+        <section id="memory">
+          <div class="text">
+            <h2>Memory nothing is using</h2>
+            <p>
+              Jetsam samples every process every 10 seconds and labels what it finds: helpers whose parent has exited,
+              processes that keep growing, idle ones, headless browsers that automation left running.
+            </p>
+            <p>
+              Reclaim ends the orphaned helpers and flushes the file cache. Anything else is ended only if you tick it
+              and confirm. A soft restart quits and reopens Chrome, VS Code or Cursor, and refuses while a Claude Code
+              agent is running inside the editor.
+            </p>
+          </div>
+          <div class="shot wide">
+            <picture>
+              <source media="(prefers-color-scheme: dark)" srcset="img/memory-dark.png" />
+              <img
+                src="img/memory-light.png"
+                width="2360"
+                height="1520"
+                loading="lazy"
+                alt="Jetsam's Memory screen: pressure and swap, Reclaim offering to end five orphaned helpers holding 3.1 GB, and the VS Code restart disabled while an agent runs in it."
+              />
+            </picture>
+          </div>
+        </section>
+
+        <section id="rules">
+          <h2>What it leaves alone</h2>
+          <p class="intro">
+            Jetsam deletes files and ends processes, so these rules are the product. Each one is enforced in code, at
+            scan time and again right before removal.
+          </p>
+          <ul class="rules">
+            <li>
+              <strong>Anything git tracks</strong>
+              Tracked files are skipped, even inside a build folder. If git cannot answer, the file counts as tracked.
+            </li>
+            <li>
+              <strong>Folders that only look like build output</strong>
+              <code>build</code>, <code>dist</code> and similar names count only inside a git repository or next to a
+              project file such as <code>package.json</code>.
+            </li>
+            <li>
+              <strong>Docker volumes and containers</strong>
+              Only images and the build cache are pruned. The disk images of Docker Desktop, OrbStack, Colima, Lima,
+              Podman and Rancher Desktop are never listed.
+            </li>
+            <li>
+              <strong>Worktrees with work in them</strong>
+              Only worktrees under <code>.claude/worktrees/</code> are considered. One goes only when nothing in it is
+              uncommitted or unmerged, git has been quiet for 24 hours and no process is working inside it.
+            </li>
+            <li>
+              <strong>Credentials, mail and photos</strong>
+              Keychains, Mail, Messages, Photos libraries, iCloud Drive, device backups, <code>~/.ssh</code>,
+              <code>~/.gnupg</code>, <code>~/.aws</code> and <code>~/.kube</code> are refused in every mode.
+            </li>
+            <li>
+              <strong>Running agents and the app in front</strong>
+              Reclaim never ends a running Claude Code agent, what it started, the terminal or editor hosting it, or the
+              app you were last using.
+            </li>
+            <li>
+              <strong>Jobs you left running</strong>
+              A process started from a terminal window is never treated as an orphan, with <code>nohup</code> or
+              without.
+            </li>
+            <li>
+              <strong>The network</strong>
+              Jetsam makes no network requests. No telemetry, no crash reports, no update check.
+            </li>
+          </ul>
+          <p class="caption">
+            Files go to the Trash, and Undo puts the last clean back for as long as its items are still there. Each
+            claim, the code behind it and the test that checks it:
+            <a href="https://github.com/nitwit45/jetsam/blob/main/docs/safety.md">docs/safety.md</a>.
+          </p>
+        </section>
+
+        <section id="numbers">
+          <h2>Measured on one machine</h2>
+          <p class="intro">
+            I built Jetsam after my MacBook Air (M4, 16 GB RAM, 256 GB SSD) ran out of room on 3 Nov 2026. I cleaned it
+            by hand that day, before Jetsam existed, so these are the numbers that made me write it, not its results.
+          </p>
+          <table>
+            <tr>
+              <th>Data volume</th>
+              <td>95.5% full, 11 GB free</td>
+            </tr>
+            <tr>
+              <th>Regenerable build folders under home</th>
+              <td>62 GB, 40.2 GB of it in 137 <code>node_modules</code> folders</td>
+            </tr>
+            <tr>
+              <th>Stale git worktrees in one repository</th>
+              <td>105 worktrees, 29 GB</td>
+            </tr>
+            <tr>
+              <th>Swap</th>
+              <td>9.5 GB of 11 GB used, 116 million swap-outs in 6 days of uptime</td>
+            </tr>
+          </table>
+          <p class="intro">
+            Afterwards the volume had 33 GB free. Later, nine headless Chrome instances started by QA scripts under two
+            coding agents held about 5.5 GB. This is one machine on one day; the method and its caveats are in
+            <a href="https://github.com/nitwit45/jetsam/blob/main/docs/measurements.md">docs/measurements.md</a>.
+          </p>
+        </section>
+
+        <section id="install">
+          <h2>Before you install</h2>
+          <div class="two">
+            <div>
+              <h3>Know this first</h3>
+              <ul>
+                <li>
+                  It is not notarized. Installed with Homebrew it opens normally. From the DMG, macOS blocks the first
+                  launch and the
+                  <a href="https://github.com/nitwit45/jetsam#opening-an-unsigned-build">README has the two steps</a>.
+                </li>
+                <li>
+                  It wants Full Disk Access to see the Trash and some app data. Without it Jetsam still works and tells
+                  you what it cannot see.
+                </li>
+                <li>
+                  It is tested on Apple silicon. The Intel half of the universal build has only been run under Rosetta.
+                </li>
+                <li>
+                  What it removes downloads or rebuilds the next time a project needs it. On slow or metered internet
+                  that cost is real.
+                </li>
+                <li>
+                  The weekly clean and <code>--headless</code> run with no preview. They remove only what a scan would
+                  preselect, in Light or Standard.
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3>Use something else if</h3>
+              <ul>
+                <li>
+                  You want a command line tool to script: <a href="https://github.com/tw93/Mole">Mole</a> or
+                  <a href="https://github.com/voidcosmos/npkill">npkill</a>.
+                </li>
+                <li>You only want to see what fills the disk: GrandPerspective or DaisyDisk.</li>
+                <li>You need to uninstall apps: AppCleaner.</li>
+                <li>Your Mac is managed and blocks unsigned apps.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <span
+          >Jetsam is free software under the MIT licence, made by Nithila Ariyapperuma. The name is the kernel's own:
+          jetsam is what XNU calls ending processes to get memory back.</span
+        >
+        <nav>
+          <a href="https://github.com/nitwit45/jetsam">Source</a>
+          <a href="https://github.com/nitwit45/jetsam/releases">Releases</a>
+          <a href="https://github.com/nitwit45/jetsam/blob/main/docs/FAQ.md">FAQ</a>
+          <a href="https://github.com/nitwit45/jetsam/issues">Issues</a>
+          <a href="https://github.com/nitwit45/jetsam/blob/main/SECURITY.md">Security</a>
+        </nav>
+      </footer>
+    </div>
+
+    <script>
+      const copy = document.getElementById("copy");
+      copy.addEventListener("click", async () => {
+        await navigator.clipboard.writeText(document.getElementById("brew").textContent);
+        copy.textContent = "Copied";
+        setTimeout(() => (copy.textContent = "Copy"), 1500);
+      });
+    </script>
+  </body>
+</html>

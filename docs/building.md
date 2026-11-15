@@ -61,6 +61,19 @@ bun run tauri build --target universal-apple-darwin --bundles dmg
 
 Its output is under `src-tauri/target/universal-apple-darwin/release/bundle/`. Builds are ad-hoc signed (`signingIdentity` `"-"` in `tauri.conf.json`) so Apple silicon runs them. Neither is signed with a Developer ID or notarized, so the steps in the README's "Opening an unsigned build" apply to your own build too once it has been downloaded.
 
+## Site
+
+Open `site/index.html` in a browser to preview the landing page. GitHub Pages serves the `gh-pages` branch, which is a copy of `site/` with the links resolved. To publish a change:
+
+```sh
+git worktree add ../jetsam-pages gh-pages
+rsync -aL --delete --exclude .git --exclude .nojekyll site/ ../jetsam-pages/
+git -C ../jetsam-pages add -A
+git -C ../jetsam-pages commit -m "Publish site"
+git -C ../jetsam-pages push origin gh-pages
+git worktree remove ../jetsam-pages
+```
+
 ## Layout
 
 | Path | What is in it |
@@ -75,5 +88,6 @@ Its output is under `src-tauri/target/universal-apple-darwin/release/bundle/`. B
 | `src-tauri/src/ram.rs`, `memory.rs` | Memory sampling, labels, Reclaim and soft restart. |
 | `src-tauri/src/system.rs` | Freshen actions, the schedule, Full Disk Access, the administrator prompt. |
 | `src-tauri/src/main.rs` | The binary entry point and the `--headless` flags. |
-| `docs/img/` | README and docs screenshots, captured in sample-data mode at 2x. |
+| `docs/img/` | README, docs and site screenshots, captured in sample-data mode at 2x. |
+| `site/` | The landing page at [nitwit45.github.io/jetsam](https://nitwit45.github.io/jetsam/): one HTML file and one stylesheet, no build step. Its images are a link to `docs/img/`. |
 | `docs/icon.svg` | The app icon as a 1024 px SVG. `src-tauri/icons/` holds the sizes the bundle uses. |

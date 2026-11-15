@@ -36,6 +36,7 @@ How a version goes out. The workflow is `.github/workflows/release.yml`; if this
    ```
 
 10. Update the Homebrew cask: in [nitwit45/homebrew-tap](https://github.com/nitwit45/homebrew-tap), set `version` and `sha256` in `Casks/jetsam.rb`, run `brew style nitwit45/tap` and `brew audit --cask --strict --online nitwit45/tap/jetsam`, and push.
+11. If a screenshot or a claim on the landing page changed, publish `site/` as described in [building.md](building.md#site).
 
 `Jetsam.dmg` keeps the same name in every release, so `releases/latest/download/Jetsam.dmg` in the README always points at the newest one.
 

@@ -1,0 +1,377 @@
+/* Jetsam's site. One page, no build step. Colours are the app's own (src/index.css). */
+
+:root {
+  --accent: #0e9f8f;
+  --accent-ink: #ffffff;
+  --bg: #f5f5f7;
+  --panel: #ffffff;
+  --line: rgba(0, 0, 0, 0.1);
+  --fg: #1d1d1f;
+  --fg-2: #5c5c61;
+  --fg-3: #8e8e93;
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.12);
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: #2fc4b2;
+    --accent-ink: #062623;
+    --bg: #1c1c1e;
+    --panel: #242426;
+    --line: rgba(255, 255, 255, 0.1);
+    --fg: #f2f2f5;
+    --fg-2: #b4b4ba;
+    --fg-3: #7d7d85;
+    --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 17px/1.55 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--fg-3);
+  text-underline-offset: 3px;
+}
+a:hover {
+  text-decoration-color: var(--accent);
+}
+code,
+kbd {
+  font: 0.88em var(--mono);
+}
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.wrap {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+/* Header */
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 0;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 650;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+.brand img {
+  width: 30px;
+  height: 30px;
+}
+.top nav {
+  display: flex;
+  gap: 24px;
+  font-size: 15px;
+}
+.top nav a {
+  color: var(--fg-2);
+  text-decoration: none;
+}
+.top nav a:hover {
+  color: var(--fg);
+}
+
+/* Hero */
+.hero {
+  padding: 56px 0 28px;
+  max-width: 800px;
+}
+h1 {
+  margin: 0 0 20px;
+  font-size: clamp(36px, 5.6vw, 58px);
+  line-height: 1.06;
+  letter-spacing: -0.032em;
+  font-weight: 700;
+}
+.lede {
+  margin: 0;
+  max-width: 660px;
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--fg-2);
+}
+.get {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 32px 0 14px;
+}
+.button {
+  display: inline-block;
+  padding: 11px 20px;
+  border-radius: 9px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+  font-size: 16px;
+  text-decoration: none;
+}
+.button:hover {
+  filter: brightness(1.06);
+}
+.brew {
+  max-width: 100%;
+  overflow-x: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 6px 0 14px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--panel);
+}
+.brew code {
+  font-size: 14px;
+  white-space: nowrap;
+}
+.brew button {
+  border: 0;
+  background: none;
+  color: var(--fg-2);
+  font: 13px var(--sans);
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.brew button:hover {
+  color: var(--fg);
+  background: var(--line);
+}
+.fine {
+  margin: 0;
+  font-size: 14px;
+  color: var(--fg-3);
+}
+.fine a {
+  color: var(--fg-2);
+}
+
+.shot {
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  background: var(--panel);
+}
+.hero-shot {
+  margin: 36px 0 0;
+}
+.caption {
+  margin: 12px 2px 0;
+  font-size: 13px;
+  color: var(--fg-3);
+}
+
+/* Sections */
+section {
+  padding: 76px 0 0;
+}
+h2 {
+  margin: 0 0 14px;
+  font-size: clamp(26px, 3.2vw, 34px);
+  line-height: 1.15;
+  letter-spacing: -0.022em;
+  font-weight: 680;
+}
+h3 {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 650;
+}
+p {
+  margin: 0 0 14px;
+}
+.intro {
+  max-width: 680px;
+  color: var(--fg-2);
+}
+
+/* Modes */
+.modes {
+  margin: 28px 0 0;
+  border-top: 1px solid var(--line);
+}
+.modes div {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 24px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+.modes dt {
+  font-weight: 650;
+}
+.modes dt span {
+  display: block;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--fg-3);
+}
+.modes dd {
+  margin: 0;
+  color: var(--fg-2);
+}
+
+/* Feature sections: a short text block, then the screenshot at full width so it can be read */
+.text {
+  max-width: 700px;
+}
+.text p {
+  color: var(--fg-2);
+}
+.wide {
+  margin-top: 28px;
+}
+
+/* Rules */
+.rules {
+  margin: 26px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 48px;
+  border-top: 1px solid var(--line);
+}
+.rules li {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--fg-2);
+}
+.rules strong {
+  display: block;
+  color: var(--fg);
+  font-weight: 650;
+}
+
+/* Numbers */
+table {
+  width: 100%;
+  margin: 24px 0 18px;
+  border-collapse: collapse;
+  font-size: 16px;
+}
+th,
+td {
+  text-align: left;
+  vertical-align: top;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line);
+}
+th {
+  width: 42%;
+  padding-right: 24px;
+  font-weight: 400;
+  color: var(--fg-2);
+}
+td {
+  font-variant-numeric: tabular-nums;
+}
+tr:first-child th,
+tr:first-child td {
+  border-top: 1px solid var(--line);
+}
+
+.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+}
+.two ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--fg-2);
+}
+.two li {
+  margin: 0 0 8px;
+}
+
+footer {
+  margin: 88px 0 0;
+  padding: 26px 0 44px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px 28px;
+  font-size: 14px;
+  color: var(--fg-3);
+}
+footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+footer a {
+  color: var(--fg-2);
+  text-decoration: none;
+}
+footer a:hover {
+  color: var(--fg);
+}
+
+@media (max-width: 820px) {
+  body {
+    font-size: 16px;
+  }
+  .wrap {
+    padding: 0 20px;
+  }
+  .hero {
+    padding-top: 32px;
+  }
+  .lede {
+    font-size: 18px;
+  }
+  .top nav a.hide {
+    display: none;
+  }
+  section {
+    padding-top: 56px;
+  }
+  .two,
+  .rules {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .rules {
+    gap: 0;
+  }
+  .modes div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .brew code {
+    font-size: 12.5px;
+  }
+}
