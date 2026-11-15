@@ -75,6 +75,8 @@ Soft restart messages:
 
 **launchctl bootstrap failed.** launchd would not load the job. Turn **Weekly clean** off and on again. The job's output goes to `~/Library/Logs/Jetsam/weekly.log`.
 
+**The weekly clean never runs and `weekly.log` stays empty.** The job runs the copy of Jetsam that switched it on. If that was the mounted DMG or a copy in Downloads, the file is gone by Sunday. Turn **Weekly clean** off and on again from the copy in Applications.
+
 ## Command line
 
 The binary prints `jetsam: ` and one of these, then exits with status 2:

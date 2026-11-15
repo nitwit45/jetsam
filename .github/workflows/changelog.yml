@@ -3,6 +3,12 @@ name: Changelog
 on:
   pull_request:
     branches: [main]
+    # Docs and repository housekeeping need no changelog line. If this job ever becomes a required
+    # check, drop the filter: a workflow skipped by a path filter leaves a required check pending.
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - ".github/**"
 
 permissions:
   contents: read

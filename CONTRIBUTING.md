@@ -45,7 +45,7 @@ If you are unsure whether something is regenerable, it is not.
 
 ## Changelog
 
-Add a line under `## Unreleased` in [CHANGELOG.md](CHANGELOG.md); CI fails a PR that does not touch it (Dependabot PRs are exempt). Put it in one of the sections Safety, Added, Changed or Fixed. Safety is for any change to what can be removed or ended. Prefix the line with the area and end it with the PR number:
+Add a line under `## Unreleased` in [CHANGELOG.md](CHANGELOG.md); CI fails a PR that changes code without touching it. PRs that change only Markdown files, `docs/` or `.github/` are exempt, and so are Dependabot PRs. Put the line in one of the sections Safety, Added, Changed or Fixed. Safety is for any change to what can be removed or ended. Prefix the line with the area and end it with the PR number, which you have once the PR is open:
 
 ```markdown
 - Clean: stale worktrees with an ignored `.env` are now skipped (#12).

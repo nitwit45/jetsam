@@ -35,13 +35,15 @@ How a version goes out. The workflow is `.github/workflows/release.yml`; if this
    gh release verify-asset Jetsam.dmg --repo nitwit45/jetsam
    ```
 
+10. Update the Homebrew cask: in [nitwit45/homebrew-tap](https://github.com/nitwit45/homebrew-tap), set `version` and `sha256` in `Casks/jetsam.rb`, run `brew style nitwit45/tap` and `brew audit --cask --strict --online nitwit45/tap/jetsam`, and push.
+
 `Jetsam.dmg` keeps the same name in every release, so `releases/latest/download/Jetsam.dmg` in the README always points at the newest one.
 
 ## Releasing without the workflow
 
 0.1.0 was released this way, from one Mac. The result has a checksum and GitHub's release attestation, but no build provenance attestation, and the notes have to say so.
 
-1. Do steps 1 to 3 with the Release workflow disabled (`gh workflow disable release.yml`), so the tag does not start it.
+1. Do steps 1 to 3 with the Release workflow disabled (`gh workflow disable release.yml`), so the tag does not start it. Turn it back on with `gh workflow enable release.yml` before the next release that uses the workflow.
 2. Run the checks in [building.md](building.md#checks). Then build with your home folder remapped, or the binary carries your account name in the source paths of its panic messages:
 
    ```sh
@@ -60,12 +62,29 @@ How a version goes out. The workflow is `.github/workflows/release.yml`; if this
    ```
 
    The count must be 0. Run the app from the mounted image once, and run `jetsam --headless --dry-run` natively and under `arch -x86_64`.
-4. Write `notes.md` the way the workflow does: the CHANGELOG section, then the install block with the SHA-256 table. Leave out `gh attestation verify` and say the build was local.
-5. Create the draft, then follow steps 5 to 9:
+4. Write `notes.md`: the body of the version's CHANGELOG section, then this block with the checksum and version filled in:
+
+   ````markdown
+   ### Install
+
+   Download Jetsam.dmg below, open it and drag Jetsam to Applications. It is not signed with an Apple Developer ID, so macOS blocks the first launch: see [Opening an unsigned build](https://github.com/nitwit45/jetsam#opening-an-unsigned-build).
+
+   | File | SHA-256 |
+   |---|---|
+   | Jetsam.dmg | `<sha256>` |
 
    ```sh
-   gh release create v0.1.0 --draft --verify-tag --title "Jetsam 0.1.0" \
-     --notes-file notes.md Jetsam.dmg Jetsam.dmg.sha256
+   shasum -a 256 -c Jetsam.dmg.sha256
+   gh release verify-asset v<version> Jetsam.dmg --repo nitwit45/jetsam
+   ```
+
+   I built the release on my own Mac, not in the release workflow, so it has no build provenance attestation.
+   ````
+5. Create the draft from that folder, then follow steps 5 to 9, skipping the `gh attestation verify` line in step 6:
+
+   ```sh
+   gh release create v<version> --repo nitwit45/jetsam --draft --verify-tag \
+     --title "Jetsam <version>" --notes-file notes.md Jetsam.dmg Jetsam.dmg.sha256
    ```
 
 ## Changelog sections

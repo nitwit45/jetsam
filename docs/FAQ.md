@@ -14,7 +14,7 @@
 
 ## I cleaned 20 GB but Finder shows no new free space
 
-Files moved to the Trash still use disk space until the Trash is emptied. The toast after a clean says so: "Files are in the Trash until you empty it." Empty the Trash in Finder, or run a Light scan and delete the Trash category permanently.
+Files moved to the Trash still use disk space until the Trash is emptied. The toast after a clean says so: "Files are in the Trash until you empty it." Empty the Trash in Finder. Or run a Light clean: the Trash items come back as not cleaned, and **Delete these permanently** empties them once you type `delete`.
 
 If the Trash is empty and the space still has not come back, APFS may be holding it in local Time Machine snapshots or as purgeable space. **Freshen > Thin local Time Machine snapshots** asks macOS to thin them.
 
@@ -24,7 +24,7 @@ That is expected. Everything Jetsam removes in Clean is something a tool can reg
 
 ## Why does it need Full Disk Access?
 
-macOS blocks apps from reading some folders under `~/Library`, such as `~/Library/Mail` and `~/Library/Safari`, without it. Jetsam works without it, but the scan and Aged Files cannot see into those folders, so their sizes are missing. Jetsam checks by trying to read those two folders, shows a banner while it cannot, and checks again each time its window comes to the front.
+macOS blocks apps from reading some folders in your home folder without it: the Trash, `~/Library/Safari` and parts of other apps' data. Jetsam works without it, but the Trash category and Aged Files miss whatever sits in those folders. Jetsam checks by trying to read `~/Library/Mail` and `~/Library/Safari`, shows a banner while it cannot, and checks again each time its window comes to the front.
 
 Full Disk Access does not widen what Jetsam deletes: Mail, Messages and the rest of the deny-list are refused either way.
 
@@ -63,7 +63,7 @@ Moving something that is already in the Trash to the Trash is refused, so those 
 
 ## What does Undo cover?
 
-The most recent batch in the ops log, and only items that went to the Trash in your home folder's `~/.Trash`. That batch can be the weekly job's: if it ran after your last clean in the app, Undo restores the weekly job's items, and your own clean can no longer be undone. Each item is put back from the exact place it landed, recorded in the ops log. It is skipped if it is no longer in the Trash, if something now sits at its original path, or if the folder it came from is gone. Permanent deletes, `brew` or `docker` commands and `git worktree prune` cannot be undone.
+Undo is a button in the toast that follows a clean. It shows for 12 seconds, and only when every item in that clean succeeded; a clean that left items behind shows **Details** instead. It acts on the most recent batch in the ops log, and only on items that went to the Trash in your home folder's `~/.Trash`. Each item is put back from the exact place it landed, recorded in the ops log. It is skipped if it is no longer in the Trash, if something now sits at its original path, or if the folder it came from is gone. Once the toast is gone, Finder's **Put Back** returns an item to where it came from. Permanent deletes, `brew` or `docker` commands and `git worktree prune` cannot be undone.
 
 ## Does it protect other coding agents?
 

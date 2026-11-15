@@ -1,6 +1,6 @@
 # Safety review
 
-Reviewed 10 Nov 2026 against commit `548fa4b`.
+Reviewed 10 Nov 2026. Every function and test named below was checked again on 15 Nov 2026 and exists in v0.1.0.
 
 This is a maintainer review, not an independent audit.
 
@@ -32,7 +32,7 @@ Each row is one claim from the README, the code that enforces it, and the test t
 | Files go to the Trash through NSFileManager, and Jetsam records where each one landed. | `cleaner::trash_context`, `cleaner::move_to_trash`, `cleaner::locate_in_trash` | `cleaner::nsfilemanager_trash_records_where_the_file_landed` (ignored by default: it uses the real `~/.Trash`; run with `cargo test -- --ignored`) |
 | If the Trash refuses an item it stays on disk with reason `trash-refused`; nothing falls back to a permanent delete. | `cleaner::move_to_trash`, `cleaner::TRASH_REFUSED` | `cleaner::items_already_in_the_trash_are_refused_not_removed` |
 | A permanent delete of refused items is offered only behind typing `delete`. | `src/components/clean/CleanModals.tsx` (UI) | No test |
-| Undo acts on the most recent batch in the ops log, a scheduled run's included. It restores only the exact Trash entry recorded at delete time, never over a path that exists again. Items trashed on another volume are not located, so they cannot be restored. | `cleaner::restore`, `cleaner::undo_last`, `cleaner::read_last_batch`, `cleaner::locate_in_trash` | `cleaner::undo_restores_the_recorded_trash_entry_and_skips_conflicts` |
+| Undo acts on the most recent batch in the ops log. The app offers it only as a toast button, for 12 seconds after a clean in which every item succeeded. It restores only the exact Trash entry recorded at delete time, never over a path that exists again. Items trashed on another volume are not located, so they cannot be restored. | `cleaner::restore`, `cleaner::undo_last`, `cleaner::read_last_batch`, `cleaner::locate_in_trash` | `cleaner::undo_restores_the_recorded_trash_entry_and_skips_conflicts` |
 | Every clean appends one JSON line per item to `~/Library/Application Support/Jetsam/ops.log`. | `cleaner::append_ops`, `cleaner::ops_log_path` | `cleaner::clean_permanent_deletes_and_logs` |
 | Headless and scheduled runs send files to the Trash and skip `review` items. They also run the Homebrew and Docker command items, which are permanent. | `lib::run_headless` | No test |
 | Removing a worktree runs `git worktree prune` in its repository, which permanently deletes that worktree's entry under `.git/worktrees/` and any other stale entry there. Undo restores the folder but does not register it as a worktree again. | `cleaner::clean`, `cleaner::undo_last` | No test |

@@ -4,7 +4,7 @@
 
 - macOS 13 or later. Jetsam is tested on Apple silicon only. Release DMGs are universal (`aarch64` and `x86_64`).
 - [bun](https://bun.sh) 1.3.13. CI pins this version because it wrote `bun.lock`; a different bun can rewrite the lockfile, and `bun install --frozen-lockfile` then fails on an unchanged repo. Bump the pin and regenerate `bun.lock` in the same PR.
-- Rust stable from `rustup`, with `clippy` and `rustfmt`. CI uses `dtolnay/rust-toolchain@stable`; there is no `rust-toolchain.toml`.
+- Rust stable from `rustup`, with `clippy` and `rustfmt`. The toolchain is not pinned: CI uses the current stable.
 - The Tauri 2 CLI comes from `@tauri-apps/cli` in `package.json`, run as `bun run tauri`.
 - `git` on your `PATH`. Several tests create real repositories in a temporary folder.
 
@@ -35,7 +35,7 @@ cargo clippy --all-targets -- -D warnings
 cargo test
 ```
 
-The repository has no `justfile`, `typos.toml`, `.nvmrc`, `clippy.toml`, `scripts/` folder or `src-tauri/tests/`. CI runs the commands above directly, the bun version is pinned in the workflows rather than in `.nvmrc`, the tag version check is inline in `release.yml`, and the Rust tests sit in a `tests` module beside the code they check.
+The cargo commands need `dist/`, which `bun run build` writes, so keep this order on a fresh clone. CI runs the same commands directly. The bun version is pinned in the workflows, the tag version check is inline in `release.yml`, and the Rust tests sit in a `tests` module beside the code they check.
 
 `bun run lint` is ESLint plus `prettier --check`. `bun run format` rewrites files with Prettier. Rust formatting follows `src-tauri/rustfmt.toml` (110 columns).
 

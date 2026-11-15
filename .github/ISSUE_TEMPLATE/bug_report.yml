@@ -1,4 +1,4 @@
-name: Bug
+name: Bug report
 description: Something does not work as the README or docs say
 labels: [bug]
 body:

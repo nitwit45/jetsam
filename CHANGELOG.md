@@ -23,7 +23,7 @@ First public release: four clean modes with a preview, Aged Files, and memory tr
 ### Added
 
 - Clean: Light, Standard, Deep and Full modes, each with a preview.
-- Clean: Undo for the most recent batch, a scheduled run's included, restored from where each item landed in the Trash.
+- Clean: Undo in the toast after a clean, restored from where each item landed in the Trash.
 - Clean: ops log at `~/Library/Application Support/Jetsam/ops.log`.
 - Aged Files: big files not opened for 30 days to a year, by Spotlight's last-used date.
 - Memory: pressure, swap and a per-process view labelled orphan, leak, idle, headless browser, VM or protected. Reclaim, soft restart of Chrome, VS Code and Cursor, and Restart now through the macOS restart dialog.

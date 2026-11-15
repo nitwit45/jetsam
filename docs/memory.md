@@ -60,7 +60,7 @@ The root and all its child processes form one group, named after the script that
 
 ### idle
 
-At least 200 MB resident and under 0.5% CPU in every sample from the last 15 minutes, with at least six samples. With fewer samples, it needs to have been running for more than 15 minutes and be under 0.5% CPU now. Informational only.
+At least 200 MB resident and under 0.5% CPU in every kept sample, which is at most the last 10 minutes, with at least six samples. With fewer samples, it needs to have been running for more than 15 minutes and be under 0.5% CPU now. Informational only.
 
 ### leak
 

@@ -10,7 +10,7 @@ Use GitHub's private vulnerability reporting on this repository (**Security > Re
 
 One person maintains Jetsam. You will get a reply within 7 days.
 
-A bug that makes Jetsam delete or end something it should not is treated as a security issue, whether or not anyone could exploit it. That includes anything that gets past the deny-list, removes a git-tracked file, removes a worktree with unmerged work, prunes a Docker volume or container, or ends a running Claude Code agent or a protected process. For those, also attach the matching lines from `~/Library/Application Support/Jetsam/ops.log`.
+A bug that makes Jetsam delete or end something it should not gets the same priority as a vulnerability, whether or not anyone could exploit it. That includes anything that gets past the deny-list, removes a git-tracked file, removes a worktree with unmerged work, prunes a Docker volume or container, or ends a running Claude Code agent or a protected process. Report one with the [Jetsam removed or ended something](https://github.com/nitwit45/jetsam/issues/new?template=data_loss.yml) issue form, which is public, or through private reporting if the paths or details are sensitive. Either way, attach the matching lines from `~/Library/Application Support/Jetsam/ops.log`.
 
 ## What Jetsam can do on your Mac
 
