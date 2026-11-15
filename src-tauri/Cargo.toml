@@ -1,6 +1,6 @@
 [package]
 name = "jetsam"
-version = "0.1.0"
+version = "0.1.1"
 description = "macOS disk and memory cleaner for developers: caches, build artefacts, Docker leftovers and RAM reclaim, never touching git-tracked files or user data"
 authors = ["Nithila Ariyapperuma"]
 license = "MIT"

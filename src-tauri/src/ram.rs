@@ -51,6 +51,7 @@ const ORPHAN_NAMES: [&str; 11] = [
     "code helper",
     "cursor helper",
 ];
+const SHELL_NAMES: [&str; 8] = ["zsh", "bash", "fish", "sh", "dash", "ksh", "tcsh", "csh"];
 const PROTECTED_NAMES: [&str; 4] = ["WindowServer", "loginwindow", "kernel_task", "launchd"];
 /// Executables macOS ships: ending one can take down the session or a system service.
 const SYSTEM_PREFIXES: [&str; 7] =
@@ -75,6 +76,8 @@ pub struct RawProc {
     pub comm: String,
     /// Command-line flags after the executable (from a second `ps ... args=` pass).
     pub args: String,
+    /// It has a controlling terminal (`ps` shows a tty rather than `??`).
+    pub tty: bool,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -91,6 +94,9 @@ pub struct Lineage {
     pub started: i64,
     /// Some sample saw it with a parent other than launchd.
     pub had_parent: bool,
+    /// Some sample saw it as the child of a shell in a terminal window: a person started
+    /// it, or a script they ran did. Reclaim leaves these alone after the terminal closes.
+    pub from_terminal: bool,
 }
 
 /// The Claude agent a process was last attributed to, and when.
@@ -163,6 +169,7 @@ pub fn parse_ps_line(line: &str) -> Option<RawProc> {
     let (rss, r) = take_token(r)?;
     let (cpu, r) = take_token(r)?;
     let (etime, r) = take_token(r)?;
+    let (tty, r) = take_token(r)?;
     let comm = r.trim();
     if comm.is_empty() {
         return None;
@@ -176,6 +183,7 @@ pub fn parse_ps_line(line: &str) -> Option<RawProc> {
         elapsed_sec: parse_etime(etime),
         comm: comm.to_string(),
         args: String::new(),
+        tty: tty != "??",
     })
 }
 
@@ -206,7 +214,7 @@ pub fn attach_args(procs: &mut [RawProc], ps_args: &str) {
 }
 
 pub fn list_processes() -> Vec<RawProc> {
-    let mut procs = run_cmd("ps", &["-axo", "pid=,ppid=,pgid=,rss=,%cpu=,etime=,comm="])
+    let mut procs = run_cmd("ps", &["-axo", "pid=,ppid=,pgid=,rss=,%cpu=,etime=,tty=,comm="])
         .map(|s| parse_ps(&s))
         .unwrap_or_default();
     if let Some(args) = run_cmd("ps", &["-axwwo", "pid=,args="]) {
@@ -299,6 +307,15 @@ fn vm_label(comm: &str, orbstack_running: bool) -> &'static str {
 fn is_orphan_name(name: &str) -> bool {
     let n = name.to_ascii_lowercase();
     ORPHAN_NAMES.iter().any(|o| n.starts_with(o))
+}
+
+/// A shell in a terminal window, or a script run from one: it has a controlling terminal
+/// and was not started to run a single command string. The shells coding agents and
+/// editors spawn are `zsh -c ...` with no terminal, so they do not count.
+fn is_terminal_shell(p: &RawProc) -> bool {
+    let name = basename(&p.comm).trim_start_matches('-');
+    let command_flag = |a: &str| a.starts_with('-') && !a.starts_with("--") && a.contains('c');
+    p.tty && SHELL_NAMES.contains(&name) && !p.args.split_whitespace().any(command_flag)
 }
 
 // ---------- process tree ----------
@@ -512,11 +529,12 @@ fn is_leak(samples: Option<&Vec<Sample>>) -> bool {
 
 /// Handed to launchd after a sample saw it with a real parent, and not a launchd job.
 /// A parent of 1 alone proves nothing: LaunchAgents and anything daemonised at birth
-/// look exactly the same.
+/// look exactly the same. A job started from a terminal is not an orphan either: someone
+/// left it running on purpose (`nohup`, `disown`), and closing the window does not change that.
 fn was_orphaned(p: &RawProc, seen: &Sampler, launchd_jobs: &HashMap<u32, String>) -> bool {
     p.ppid == 1
         && !launchd_jobs.contains_key(&p.pid)
-        && seen.lineage.get(&p.pid).is_some_and(|l| l.had_parent)
+        && seen.lineage.get(&p.pid).is_some_and(|l| l.had_parent && !l.from_terminal)
 }
 
 pub fn tag(procs: &[RawProc], seen: &Sampler, ctx: &TagCtx) -> Vec<ProcRow> {
@@ -616,15 +634,21 @@ impl Sampler {
     fn update_lineage(&mut self, procs: &[RawProc], ts: i64) -> HashSet<u32> {
         let live: HashSet<u32> = procs.iter().map(|p| p.pid).collect();
         self.lineage.retain(|pid, _| live.contains(pid));
+        let terminal_shells: HashSet<u32> =
+            procs.iter().filter(|p| is_terminal_shell(p)).map(|p| p.pid).collect();
         let mut newcomers = HashSet::new();
         for p in procs {
             let started = ts - p.elapsed_sec as i64;
+            let (had_parent, from_terminal) = (p.ppid > 1, terminal_shells.contains(&p.ppid));
             match self.lineage.get_mut(&p.pid) {
-                Some(l) if (l.started - started).abs() <= START_SLACK_SEC => l.had_parent |= p.ppid > 1,
+                Some(l) if (l.started - started).abs() <= START_SLACK_SEC => {
+                    l.had_parent |= had_parent;
+                    l.from_terminal |= from_terminal;
+                }
                 _ => {
                     self.samples.remove(&p.pid);
                     self.claude_seen.remove(&p.pid);
-                    self.lineage.insert(p.pid, Lineage { started, had_parent: p.ppid > 1 });
+                    self.lineage.insert(p.pid, Lineage { started, had_parent, from_terminal });
                     newcomers.insert(p.pid);
                 }
             }
@@ -988,6 +1012,7 @@ mod tests {
             elapsed_sec: elapsed,
             comm: comm.into(),
             args: String::new(),
+            tty: false,
         }
     }
 
@@ -1035,7 +1060,7 @@ mod tests {
 
     #[test]
     fn ps_parsing() {
-        let rows = parse_ps("  922   631   631  40448   2.5 01-07:02:57 /Applications/Visual Studio Code.app/Contents/Frameworks/Code Helper.app/Contents/MacOS/Code Helper\n 4 0 0 10 0.0 05:12 kernel_task\nbad line\n");
+        let rows = parse_ps("  922   631   631  40448   2.5 01-07:02:57 ??       /Applications/Visual Studio Code.app/Contents/Frameworks/Code Helper.app/Contents/MacOS/Code Helper\n 4 0 0 10 0.0 05:12 ttys001 kernel_task\nbad line\n");
         assert_eq!(rows.len(), 2);
         assert_eq!(rows[0].pid, 922);
         assert_eq!(rows[0].ppid, 631);
@@ -1046,6 +1071,7 @@ mod tests {
         assert_eq!(basename(&rows[0].comm), "Code Helper");
         assert_eq!(app_label(&rows[0].comm), "Visual Studio Code");
         assert_eq!(rows[1].elapsed_sec, 312);
+        assert!(!rows[0].tty && rows[1].tty, "`??` means no controlling terminal");
         assert_eq!(parse_etime("03:04:05"), 3 * 3600 + 4 * 60 + 5);
         assert_eq!(parse_etime("07"), 7);
         assert_eq!(app_label("/usr/bin/node"), "node");
@@ -1105,6 +1131,42 @@ mod tests {
         let rows = tag(&after, &seen, &ctx);
         assert_eq!(reasons(&rows, 10), vec!["orphan", "idle"], "its shell exited and launchd took it");
         assert_eq!(reasons(&rows, 16), vec!["idle"], "a launchd job is never an orphan");
+    }
+
+    #[test]
+    fn job_left_running_from_a_terminal_is_not_orphan() {
+        let on_tty = |proc: RawProc| RawProc { tty: true, ..proc };
+        let before = vec![
+            p(1, 0, 5, 0.0, 99_990, "/sbin/launchd"),
+            on_tty(p(500, 1, 50, 0.0, 49_990, "/bin/zsh")),
+            on_tty(p(10, 500, 300, 0.0, 49_990, "/opt/homebrew/bin/python3")),
+            pa(600, 1, 50, "/bin/zsh", "-c npm run dev"),
+            p(11, 600, 300, 0.0, 49_990, NODE),
+        ];
+        let after = vec![
+            p(1, 0, 5, 0.0, 100_000, "/sbin/launchd"),
+            p(10, 1, 300, 0.0, 50_000, "/opt/homebrew/bin/python3"),
+            p(11, 1, 300, 0.0, 50_000, NODE),
+        ];
+        let seen = observed(&[(9_990, before), (10_000, after.clone())]);
+        let rows = tag(&after, &seen, &ctx());
+        assert_eq!(reasons(&rows, 10), vec!["idle"], "started in a terminal window, left on purpose");
+        assert_eq!(reasons(&rows, 11), vec!["orphan", "idle"], "an agent's `zsh -c` shell has no terminal");
+    }
+
+    #[test]
+    fn terminal_shells_are_told_from_command_shells() {
+        let on_tty = |proc: RawProc| RawProc { tty: true, ..proc };
+        assert!(is_terminal_shell(&on_tty(pa(1, 2, 1, "/bin/zsh", ""))), "a login shell: argv is `-zsh`");
+        assert!(is_terminal_shell(&on_tty(pa(1, 2, 1, "/bin/bash", "--login"))));
+        assert!(
+            is_terminal_shell(&on_tty(pa(1, 2, 1, "/bin/bash", "./deploy.sh --check"))),
+            "a script run by hand"
+        );
+        assert!(!is_terminal_shell(&on_tty(pa(1, 2, 1, "/bin/zsh", "-c ls"))), "one command string");
+        assert!(!is_terminal_shell(&on_tty(pa(1, 2, 1, "/bin/zsh", "-lc ls"))));
+        assert!(!is_terminal_shell(&pa(1, 2, 1, "/bin/zsh", "")), "no controlling terminal");
+        assert!(!is_terminal_shell(&on_tty(pa(1, 2, 1, NODE, ""))), "not a shell");
     }
 
     #[test]
@@ -1399,7 +1461,8 @@ mod tests {
         let procs = vec![p(60, 1, 300, 0.0, 50_000, NODE), p(61, 1, 300, 0.0, 50_000, NODE)];
         let mut seen = Sampler::default();
         for pid in [60, 61] {
-            seen.lineage.insert(pid, Lineage { started: 10_000 - 50_000, had_parent: true });
+            seen.lineage
+                .insert(pid, Lineage { started: 10_000 - 50_000, had_parent: true, from_terminal: false });
         }
         seen.claude_seen.insert(60, ClaudeMark { agent: 7, ts: 10_000 - 30 });
         seen.claude_seen.insert(61, ClaudeMark { agent: 7, ts: 10_000 - 600 });
@@ -1472,13 +1535,13 @@ mod tests {
             pa(85, 1, 300, CHROME, "--headless"),
             pa(90, 1, 50, CHROME, ""),
         ];
-        let out = parse_ps("  70   1  70  409600 5.0 01:40 /opt/homebrew/bin/claude\n");
+        let out = parse_ps("  70   1  70  409600 5.0 01:40 ?? /opt/homebrew/bin/claude\n");
         attach_args(&mut procs, "70 /opt/homebrew/bin/claude\n72 /Applications/Google Chrome.app/Contents/MacOS/Google Chrome --remote-debugging-pipe\n71 node /Users/n/scrape/crawl.js --fast\n");
         assert_eq!(out.len(), 1);
         assert_eq!(procs[2].args, "--remote-debugging-pipe");
         assert_eq!(procs[1].args, "/Users/n/scrape/crawl.js --fast", "basename argv[0] is stripped too");
         let mut seen = Sampler::default();
-        seen.lineage.insert(80, Lineage { started: 9_900, had_parent: true });
+        seen.lineage.insert(80, Lineage { started: 9_900, had_parent: true, from_terminal: false });
         let rows = tag(&procs, &seen, &TagCtx { frontmost: None, ..ctx() });
         for pid in [72, 73, 74] {
             let r = row(&rows, pid);

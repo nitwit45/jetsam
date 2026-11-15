@@ -31,7 +31,8 @@ export const NEVER_TOUCHED = [
   },
   {
     title: "Docker volumes and containers",
-    detail: "Only images and the build cache are pruned. Volumes and containers can hold your data and are left alone.",
+    detail:
+      "Only images and the build cache are pruned. Volumes and containers can hold your data and are left alone, and so are the disk images Docker Desktop, OrbStack, Colima, Lima, Podman and Rancher Desktop keep them in.",
   },
   {
     title: "Claude Code agents",

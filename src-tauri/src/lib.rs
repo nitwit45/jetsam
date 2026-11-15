@@ -28,16 +28,8 @@ fn extend_path() {
     std::env::set_var("PATH", format!("{extra}:{cur}"));
 }
 
-/// One-time moves from the pre-rename layout: the support folder and the old launchd job.
-fn migrate_legacy() {
-    let home = rules::home();
-    cleaner::migrate_legacy_support_dir(&home);
-    system::remove_legacy_launch_agent(&home);
-}
-
 pub fn run() {
     extend_path();
-    migrate_legacy();
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
@@ -62,6 +54,7 @@ pub fn run() {
             commands::freshen,
             commands::reveal,
             commands::undo_last,
+            commands::last_batch,
             commands::schedule,
             commands::fda_status,
             commands::open_fda_settings,
@@ -91,7 +84,6 @@ fn human(bytes: u64) -> String {
 /// `Full` through with `dry_run` set.
 pub fn run_headless(mode: Mode, dry_run: bool) -> String {
     extend_path();
-    migrate_legacy();
     let result = categories::run_scan(mode, rules::DEFAULT_RECENT_DAYS, scanner::Progress::noop());
     let unattended = |i: &&types::Item| i.selectable() && !i.has_flag(types::flags::REVIEW);
     let items: Vec<types::Item> =

@@ -13,7 +13,7 @@ import { api } from "./api";
 import { CleanFailuresModal } from "./components/clean/CleanModals";
 import { useEffect } from "react";
 import { StoreProvider } from "./store";
-import { useStore, type Toast } from "./storeContext";
+import { useStore, type ToastAction } from "./storeContext";
 import type { Page } from "./lib/pages";
 import Overview from "./pages/Overview";
 import Clean from "./pages/Clean";
@@ -128,7 +128,9 @@ function Shell() {
             className={`pointer-events-auto fade-in card flex items-center gap-2 px-3 py-2 shadow-lg ${t.kind === "error" ? "border-danger/50" : t.kind === "success" ? "border-accent/50" : ""}`}
           >
             <div className="flex-1 select-text">{t.text}</div>
-            {t.action && <ToastAction action={t.action} onDone={() => dismissToast(t.id)} />}
+            {t.actions?.map((a) => (
+              <ToastButton key={a.label} action={a} onDone={() => dismissToast(t.id)} />
+            ))}
             <button className="btn btn-ghost btn-sm px-1" onClick={() => dismissToast(t.id)} aria-label="Dismiss">
               <X size={13} />
             </button>
@@ -139,7 +141,7 @@ function Shell() {
   );
 }
 
-function ToastAction({ action, onDone }: { action: NonNullable<Toast["action"]>; onDone: () => void }) {
+function ToastButton({ action, onDone }: { action: ToastAction; onDone: () => void }) {
   return (
     <button
       className="btn btn-sm"

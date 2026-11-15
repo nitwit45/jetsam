@@ -4,7 +4,8 @@
  * It keeps just enough state to behave like the real commands: scans are stored by id and `clean` refuses ids it
  * did not hand out, the Aged view is stored under the `aged` scan id, the last Trash batch can be undone, and
  * schedule refuses the modes the backend refuses. URL switches: `?autoscan` runs a scan on load, `?nofda`
- * pretends Full Disk Access is off, `?norestore` makes the Chrome soft restart refuse.
+ * pretends Full Disk Access is off, `?norestore` makes the Chrome soft restart refuse, `?cleaned` starts with a
+ * clean from three minutes ago that Undo can still put back.
  */
 import packageJson from "../../package.json?raw";
 import type { Events } from "../api";
@@ -54,9 +55,13 @@ const rnd = () => {
   return seed / 2147483647;
 };
 
+const CLEANED = location.search.includes("cleaned");
+
 const state = {
   scans: new Map<string, Map<string, Item>>(),
-  lastTrashed: 0,
+  lastTrashed: CLEANED ? 14 : 0,
+  lastTrashedBytes: CLEANED ? 3.6e9 : 0,
+  lastCleanAt: CLEANED ? Date.now() / 1000 - 180 : 0,
   freshen: {
     hibernateMode: 3,
     spotlightDevVolume: true,
@@ -104,19 +109,25 @@ async function clean(scanId: string, ids: string[], permanent: boolean): Promise
   const failed: CleanResult["failed"] = [];
   let freed = 0;
   let trashed = 0;
+  let trashedBytes = 0;
   for (const [n, id] of ids.entries()) {
     const it = known.get(id);
     if (!it) failed.push({ id, reason: "not in this scan; rescan first" });
     else if (!permanent && it.kind !== "command" && trashRefuses(it)) failed.push({ id, reason: TRASH_REFUSED });
     else {
       freed += it.bytes;
-      if (!permanent && it.kind !== "command") trashed++;
+      if (!permanent && it.kind !== "command") {
+        trashed++;
+        trashedBytes += it.bytes;
+      }
       known.delete(id);
     }
     emit("clean:progress", { done: n + 1, total: ids.length, freedBytes: freed });
     await sleep(Math.min(120, 1500 / ids.length));
   }
-  if (!permanent) state.lastTrashed = trashed;
+  state.lastTrashed = permanent ? 0 : trashed;
+  state.lastTrashedBytes = permanent ? 0 : trashedBytes;
+  state.lastCleanAt = Date.now() / 1000;
   return { freedBytes: freed, failed };
 }
 
@@ -149,6 +160,7 @@ function aged(minBytes: number, minAgeDays: number): Item[] {
 function undoLast(): UndoResult {
   const restored = state.lastTrashed;
   state.lastTrashed = 0;
+  state.lastTrashedBytes = 0;
   return { restored, skipped: 0 };
 }
 
@@ -305,6 +317,11 @@ async function route(cmd: string, args: Record<string, unknown>): Promise<unknow
     case "undo_last":
       await sleep(700);
       return undoLast();
+    case "last_batch":
+      await sleep(60);
+      return state.lastCleanAt
+        ? { ts: state.lastCleanAt, restorable: state.lastTrashed, bytes: state.lastTrashedBytes }
+        : null;
     case "fda_status":
       await sleep(60);
       return { granted: !location.search.includes("nofda") };

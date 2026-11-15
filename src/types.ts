@@ -51,6 +51,14 @@ export const AGED_SCAN_ID = "aged";
 /** Failure reason the cleaner uses when the Trash would not take an item. The item is still on disk. */
 export const TRASH_REFUSED = "trash-refused";
 
+/** What Undo would put back right now from the most recent clean in the ops log. */
+export interface LastBatch {
+  /** When that clean ran, in seconds since the epoch. */
+  ts: number;
+  restorable: number;
+  bytes: number;
+}
+
 export interface UndoResult {
   restored: number;
   skipped: number;

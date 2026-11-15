@@ -16,7 +16,9 @@ use trash::macos::{DeleteMethod, TrashContextExtMacos};
 use crate::rules;
 use crate::scanner;
 use crate::system::run_cmd;
-use crate::types::{flags, CleanFailure, CleanProgress, CleanResult, Item, Kind, ScanResult, UndoResult};
+use crate::types::{
+    flags, CleanFailure, CleanProgress, CleanResult, Item, Kind, LastBatch, ScanResult, UndoResult,
+};
 use crate::worktrees::{self, ProcessCwds};
 
 /// The scan id the Aged view's results are stored under, alongside the last full scan.
@@ -111,17 +113,6 @@ pub fn support_dir(home: &Path) -> PathBuf {
 
 pub fn ops_log_path(home: &Path) -> PathBuf {
     support_dir(home).join("ops.log")
-}
-
-/// Builds before the rename kept their data in `Application Support/fresh`. Move it across
-/// once so the ops log, and with it undo, survives the upgrade. Never overwrites: if the
-/// new folder already exists the old one is left where it is.
-pub fn migrate_legacy_support_dir(home: &Path) {
-    let old = home.join("Library/Application Support/fresh");
-    let new = support_dir(home);
-    if old.is_dir() && !new.exists() {
-        let _ = std::fs::rename(&old, &new);
-    }
 }
 
 fn append_ops(home: &Path, entries: &[OpsEntry]) {
@@ -385,28 +376,39 @@ fn read_last_batch(home: &Path) -> Vec<OpsEntry> {
     entries.into_iter().filter(|e| e.batch == batch).collect()
 }
 
-/// Puts one trashed entry back. Only the exact Trash entry recorded at delete time is
-/// moved, and never over something that now sits at the original path.
+/// Where a trashed entry would move from and to, if it can go back right now. Only the
+/// exact Trash entry recorded at delete time counts, never over something that now sits
+/// at the original path, and only into a folder that still exists.
+fn restore_route(e: &OpsEntry) -> Option<(&Path, &Path)> {
+    let (from, id) = (Path::new(e.trashed_path.as_deref()?), e.trashed_id?);
+    let to = Path::new(&e.path);
+    let free = file_id(from) == Some(id) && std::fs::symlink_metadata(to).is_err();
+    (free && to.parent().is_some_and(Path::is_dir)).then_some((from, to))
+}
+
 fn restore(e: &OpsEntry) -> bool {
-    let (Some(from), Some(id)) = (e.trashed_path.as_deref(), e.trashed_id) else { return false };
-    let (from, to) = (Path::new(from), Path::new(&e.path));
-    if file_id(from) != Some(id) || std::fs::symlink_metadata(to).is_ok() {
-        return false;
-    }
-    if !to.parent().is_some_and(Path::is_dir) {
-        return false;
-    }
-    std::fs::rename(from, to).is_ok()
+    restore_route(e).is_some_and(|(from, to)| std::fs::rename(from, to).is_ok())
+}
+
+/// The entries of the last batch that went to the Trash.
+fn last_batch_trashed(home: &Path) -> Vec<OpsEntry> {
+    read_last_batch(home).into_iter().filter(|e| e.ok && !e.permanent && e.kind != Kind::Command).collect()
 }
 
 /// Restores what the last batch sent to the Trash.
 pub fn undo_last(home: &Path) -> UndoResult {
-    let trashed: Vec<OpsEntry> = read_last_batch(home)
-        .into_iter()
-        .filter(|e| e.ok && !e.permanent && e.kind != Kind::Command)
-        .collect();
+    let trashed = last_batch_trashed(home);
     let restored = trashed.iter().filter(|e| restore(e)).count();
     UndoResult { restored, skipped: trashed.len() - restored }
+}
+
+/// What `undo_last` would put back right now, so the app can offer Undo for as long as
+/// it would still do something. `None` when nothing has been cleaned yet.
+pub fn last_batch(home: &Path) -> Option<LastBatch> {
+    let ts = read_last_batch(home).first()?.ts;
+    let trashed = last_batch_trashed(home);
+    let back: Vec<&OpsEntry> = trashed.iter().filter(|e| restore_route(e).is_some()).collect();
+    Some(LastBatch { ts, restorable: back.len(), bytes: back.iter().map(|e| e.bytes).sum() })
 }
 
 #[cfg(test)]
@@ -690,8 +692,12 @@ mod tests {
         gone.trashed_id = Some(FileId { dev: 0, ino: 0 });
         append_ops(home, &[trashed_entry("b1", &a, &ours), trashed_entry("b1", &b, &conflicting), gone]);
 
+        let before = last_batch(home).expect("a batch is logged");
+        assert_eq!(before.restorable, 1, "only the entry Undo can really put back is counted");
+
         let res = undo_last(home);
         assert_eq!((res.restored, res.skipped), (1, 2));
+        assert_eq!(last_batch(home).map(|b| b.restorable), Some(0), "nothing left to undo");
         assert!(a.is_dir() && !ours.exists(), "restored from the recorded entry");
         assert!(unrelated.is_dir(), "a same-named entry already in the Trash is left alone");
         assert!(conflicting.is_dir(), "nothing is moved over a path that exists again");
@@ -733,24 +739,5 @@ mod tests {
         assert!(!f.exists());
         assert!(landed.path.starts_with(home.join(".Trash")));
         std::fs::rename(&landed.path, &f).unwrap();
-    }
-
-    #[test]
-    fn legacy_support_dir_moves_once_and_never_overwrites() {
-        let td = tempfile::tempdir().unwrap();
-        let home = td.path();
-        let old = home.join("Library/Application Support/fresh");
-        std::fs::create_dir_all(&old).unwrap();
-        std::fs::write(old.join("ops.log"), "old\n").unwrap();
-
-        migrate_legacy_support_dir(home);
-        assert!(!old.exists());
-        assert_eq!(std::fs::read_to_string(ops_log_path(home)).unwrap(), "old\n");
-
-        std::fs::create_dir_all(&old).unwrap();
-        std::fs::write(old.join("ops.log"), "stale\n").unwrap();
-        migrate_legacy_support_dir(home);
-        assert!(old.exists(), "an existing Jetsam folder is never replaced");
-        assert_eq!(std::fs::read_to_string(ops_log_path(home)).unwrap(), "old\n");
     }
 }

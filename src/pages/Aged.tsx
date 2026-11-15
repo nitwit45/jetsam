@@ -100,7 +100,7 @@ export default function Aged() {
         pushToast({
           kind: "error",
           text: `The Trash refused ${name}. It is still on disk.`,
-          action: { label: "Delete permanently", run: () => setConfirmDelete(it) },
+          actions: [{ label: "Delete permanently", run: () => setConfirmDelete(it) }],
         });
       } else {
         pushToast({ kind: "error", text: `Could not clean ${name}: ${failed[0].reason}` });

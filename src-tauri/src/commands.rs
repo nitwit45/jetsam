@@ -10,8 +10,8 @@ use crate::ram::{self, SharedSampler};
 use crate::rules;
 use crate::scanner::{Progress, ProgressSink};
 use crate::types::{
-    CleanResult, FdaStatus, FreshenResult, FreshenStatus, Item, MemoryInfo, Mode, ProcRow, ReclaimResult,
-    ScanResult, UndoResult,
+    CleanResult, FdaStatus, FreshenResult, FreshenStatus, Item, LastBatch, MemoryInfo, Mode, ProcRow,
+    ReclaimResult, ScanResult, UndoResult,
 };
 use crate::{aged as aged_mod, memory as memory_mod, system};
 
@@ -135,6 +135,13 @@ pub fn reveal(path: String) -> Result<(), String> {
 #[tauri::command]
 pub async fn undo_last() -> Result<UndoResult, String> {
     tauri::async_runtime::spawn_blocking(|| cleaner::undo_last(&rules::home()))
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn last_batch() -> Result<Option<LastBatch>, String> {
+    tauri::async_runtime::spawn_blocking(|| cleaner::last_batch(&rules::home()))
         .await
         .map_err(|e| e.to_string())
 }

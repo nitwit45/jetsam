@@ -63,7 +63,7 @@ Moving something that is already in the Trash to the Trash is refused, so those 
 
 ## What does Undo cover?
 
-Undo is a button in the toast that follows a clean. It shows for 12 seconds, and only when every item in that clean succeeded; a clean that left items behind shows **Details** instead. It acts on the most recent batch in the ops log, and only on items that went to the Trash in your home folder's `~/.Trash`. Each item is put back from the exact place it landed, recorded in the ops log. It is skipped if it is no longer in the Trash, if something now sits at its original path, or if the folder it came from is gone. Once the toast is gone, Finder's **Put Back** returns an item to where it came from. Permanent deletes, `brew` or `docker` commands and `git worktree prune` cannot be undone.
+Undo is a button in the toast that follows a clean, and **Undo last clean** on Overview, which stays for as long as the items are still in the Trash. It acts on the most recent batch in the ops log, and only on items that went to the Trash in your home folder's `~/.Trash`. That batch can be the weekly job's, if it ran after your last clean in the app. Each item is put back from the exact place it landed, recorded in the ops log. It is skipped if it is no longer in the Trash, if something now sits at its original path, or if the folder it came from is gone. Finder's **Put Back** also returns an item to where it came from. Permanent deletes, `brew` or `docker` commands and `git worktree prune` cannot be undone.
 
 ## Does it protect other coding agents?
 

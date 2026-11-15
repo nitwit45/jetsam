@@ -26,6 +26,7 @@ import type {
   ScheduleMode,
   SoftRestartApp,
   SoftRestartResult,
+  LastBatch,
   UndoResult,
 } from "./types";
 
@@ -67,6 +68,7 @@ export const api = {
   freshen: (action: FreshenAction) => call<{ ok: boolean; message: string }>("freshen", { action }),
   reveal: (path: string) => call<void>("reveal", { path }),
   undoLast: () => call<UndoResult>("undo_last"),
+  lastBatch: () => call<LastBatch | null>("last_batch"),
   schedule: (enabled: boolean, mode: ScheduleMode) => call<boolean>("schedule", { enabled, mode }),
   fdaStatus: () => call<FdaStatus>("fda_status"),
   openFdaSettings: () => call<void>("open_fda_settings"),

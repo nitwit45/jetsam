@@ -1,4 +1,4 @@
-import { Eye, Search, ShieldCheck, Trash2 } from "lucide-react";
+import { Eye, Search, ShieldCheck, Trash2, Undo2 } from "lucide-react";
 import { useState } from "react";
 import { useStore } from "../storeContext";
 import { Empty, ErrorBox, PageHeader, Segmented, Skeleton, Spinner } from "../components/ui";
@@ -19,11 +19,19 @@ export default function Overview() {
     mode,
     setMode,
     lastClean,
+    undoable,
+    undoLast,
     selectedBytes,
     selectedCount,
     setPage,
   } = useStore();
   const [showNeverTouched, setShowNeverTouched] = useState(false);
+  const [undoing, setUndoing] = useState(false);
+  const undo = async () => {
+    setUndoing(true);
+    await undoLast();
+    setUndoing(false);
+  };
   const total = scan?.diskTotal ?? 0;
   const free = scan?.diskFree ?? 0;
   const deeper = nextDeeperMode(mode);
@@ -89,6 +97,8 @@ export default function Overview() {
                 Last cleaned {relTime(lastClean.at / 1000)} ·{" "}
                 <span className="tnum text-fg-2">{fmtBytes(lastClean.freedBytes)}</span>
               </>
+            ) : undoable ? (
+              <>Last cleaned {relTime(undoable.ts)}</>
             ) : (
               "Not cleaned yet"
             )}
@@ -100,6 +110,17 @@ export default function Overview() {
               </>
             )}
           </div>
+          {undoable && undoable.restorable > 0 && (
+            <div className="flex flex-wrap items-center gap-2 text-xs text-fg-3">
+              <button className="btn btn-sm" disabled={undoing} onClick={() => void undo()}>
+                {undoing ? <Spinner /> : <Undo2 size={12} />} Undo last clean
+              </button>
+              <span>
+                <span className="tnum text-fg-2">{undoable.restorable.toLocaleString()}</span>{" "}
+                {undoable.restorable === 1 ? "item" : "items"} · {fmtBytes(undoable.bytes)} · still in the Trash
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

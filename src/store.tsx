@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api, listen, MOCK } from "./api";
 import {
-  isPreselectable,
-  SCHEDULE_MODES,
-  TRASH_REFUSED,
   type CleanFailureDetail,
   type CleanProgress,
   type CleanResult,
+  isPreselectable,
   type Item,
+  type LastBatch,
   type ScanMode,
   type ScanProgress,
   type ScanResult,
+  SCHEDULE_MODES,
+  TRASH_REFUSED,
 } from "./types";
 import { StoreContext, type LastClean, type Settings, type Store, type Toast } from "./storeContext";
 import { isPage, type Page } from "./lib/pages";
@@ -121,7 +122,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const pushToast = useCallback((t: Omit<Toast, "id">) => {
     const id = ++toastId.current;
     setToasts((ts) => [...ts, { ...t, id }]);
-    setTimeout(() => setToasts((ts) => ts.filter((x) => x.id !== id)), t.action ? 12000 : 5000);
+    setTimeout(() => setToasts((ts) => ts.filter((x) => x.id !== id)), t.actions?.length ? 12000 : 5000);
     return id;
   }, []);
   const dismissToast = useCallback((id: number) => setToasts((ts) => ts.filter((x) => x.id !== id)), []);
@@ -132,8 +133,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (undoToast.current !== null) dismissToast(undoToast.current);
     undoToast.current = null;
   }, [dismissToast]);
+  // What Undo can still put back, read from the ops log, so Undo outlives its toast.
+  const [undoable, setUndoable] = useState<LastBatch | null>(null);
+  const refreshUndoable = useCallback(async () => {
+    try {
+      setUndoable(await api.lastBatch());
+    } catch {
+      setUndoable(null);
+    }
+  }, []);
+  useEffect(() => {
+    void refreshUndoable();
+    const onFocus = () => void refreshUndoable();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [refreshUndoable]);
+
   const undoLast = useCallback(async () => {
-    undoToast.current = null;
+    retireUndo();
     try {
       const { restored, skipped } = await api.undoLast();
       const back = `Put back ${plural(restored, "item")} from the Trash.`;
@@ -143,14 +160,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       pushToast({ kind: skipped ? "error" : "info", text: back + rest });
     } catch (e) {
       pushToast({ kind: "error", text: `Undo failed: ${errText(e)}` });
+    } finally {
+      void refreshUndoable();
     }
-  }, [pushToast]);
+  }, [retireUndo, pushToast, refreshUndoable]);
   const offerUndo = useCallback(
-    (text: string) => {
+    (text: string, more?: Pick<Toast, "kind" | "actions">) => {
       retireUndo();
-      undoToast.current = pushToast({ kind: "success", text, action: { label: "Undo", run: () => void undoLast() } });
+      const actions = [{ label: "Undo", run: () => void undoLast() }, ...(more?.actions ?? [])];
+      undoToast.current = pushToast({ kind: more?.kind ?? "success", text, actions });
+      void refreshUndoable();
     },
-    [retireUndo, pushToast, undoLast],
+    [retireUndo, pushToast, undoLast, refreshUndoable],
   );
 
   useEffect(() => {
@@ -244,18 +265,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           bytes: byId.get(f.id)?.bytes ?? 0,
           reason: f.reason.length > 160 ? `${f.reason.slice(0, 160)}…` : f.reason,
         }));
-        if (details.length)
-          pushToast({ kind: "error", text, action: { label: "Details", run: () => showCleanFailures(details) } });
-        else if (trashedFiles) offerUndo(text);
+        const showDetails = { label: "Details", run: () => showCleanFailures(details) };
+        // Undo is offered whenever something went to the Trash, also when other items were left behind.
+        if (trashedFiles) offerUndo(text, details.length ? { kind: "error", actions: [showDetails] } : undefined);
+        else if (details.length) pushToast({ kind: "error", text, actions: [showDetails] });
         else pushToast({ kind: "success", text });
       } catch (e) {
         pushToast({ kind: "error", text: `Clean failed: ${errText(e)}` });
       } finally {
         setCleaning(false);
         setCleanProgress(null);
+        void refreshUndoable();
       }
     },
-    [scan, cleaning, retireUndo, pushToast, offerUndo],
+    [scan, cleaning, retireUndo, pushToast, offerUndo, refreshUndoable],
   );
   const runClean = useCallback((permanent: boolean) => applyClean([...selected], permanent), [applyClean, selected]);
   const deletePermanently = useCallback(
@@ -293,6 +316,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     pushToast,
     dismissToast,
     offerUndo,
+    undoable,
+    undoLast,
     retireUndo,
     cleanFailures,
     showCleanFailures,

@@ -4,6 +4,22 @@ All notable changes to Jetsam. The format follows [Keep a Changelog](https://kee
 
 ## Unreleased
 
+## 0.1.1 - 2026-11-15
+
+Undo stays available after the toast is gone, and three things 0.1.0 could touch are now left alone.
+
+### Safety
+
+- Clean, Aged Files: the data folders of Docker Desktop, OrbStack, Colima, Lima, Podman and Rancher Desktop are on the deny-list, so a disk image holding volumes is never listed.
+- Memory: a process started from a terminal window is never an orphan. A job left running with `nohup` is no longer ended by Reclaim after its window closes.
+- Startup: removed the code that moved `~/Library/Application Support/fresh` and deleted a `com.fresh.weekly` launch agent. It was for builds from before the rename and could have touched another app's data.
+
+### Changed
+
+- Clean: Undo is offered after every clean that sent something to the Trash, also when other items were left behind.
+- Overview: **Undo last clean** stays for as long as the items are still in the Trash.
+- CLI: `--mode nuke`, an undocumented alias of `full` from before the rename, is no longer accepted.
+
 ## 0.1.0 - 2026-11-13
 
 First public release: four clean modes with a preview, Aged Files, and memory triage.

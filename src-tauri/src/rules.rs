@@ -20,7 +20,8 @@ pub fn home() -> PathBuf {
 }
 
 /// Absolute roots that are never a target and never descended into: credentials,
-/// mail and messages, iCloud and device backups, and the OS itself.
+/// mail and messages, iCloud and device backups, container engine data (their disk
+/// images hold the volumes), and the OS itself.
 pub fn deny_roots(home: &Path) -> Vec<PathBuf> {
     vec![
         home.join("Library/Keychains"),
@@ -33,6 +34,12 @@ pub fn deny_roots(home: &Path) -> Vec<PathBuf> {
         home.join(".aws"),
         home.join(".kube"),
         home.join(".docker"),
+        home.join("Library/Containers/com.docker.docker"),
+        home.join(".orbstack"),
+        home.join(".colima"),
+        home.join(".lima"),
+        home.join(".local/share/containers"),
+        home.join("Library/Application Support/rancher-desktop"),
         PathBuf::from("/System"),
         PathBuf::from("/usr"),
         PathBuf::from("/bin"),
@@ -88,6 +95,14 @@ pub fn is_denied(path: &Path, home: &Path) -> bool {
         }
         if c.to_string_lossy().ends_with(".photoslibrary") {
             return true;
+        }
+    }
+    // OrbStack and Docker Desktop keep their data under a team-prefixed group container.
+    if let Ok(rel) = path.strip_prefix(home.join("Library/Group Containers")) {
+        if let Some(group) = rel.iter().next().map(|c| c.to_string_lossy()) {
+            if group.ends_with(".dev.orbstack") || group == "group.com.docker" {
+                return true;
+            }
         }
     }
     if let Ok(rel) = path.strip_prefix(home.join(".claude/projects")) {
@@ -295,6 +310,25 @@ mod tests {
             &home
         ));
         assert!(is_denied(Path::new("/Users/t/.claude/projects/-Users-t/memory"), &home));
+    }
+
+    #[test]
+    fn container_engine_data_is_denied() {
+        let home = h();
+        for p in [
+            "/Users/t/Library/Containers/com.docker.docker/Data/vms/0/data/Docker.raw",
+            "/Users/t/Library/Group Containers/HUAQ24HBR6.dev.orbstack/data/data.img.raw",
+            "/Users/t/Library/Group Containers/group.com.docker/settings.json",
+            "/Users/t/.orbstack/config",
+            "/Users/t/.colima/default/colima.yaml",
+            "/Users/t/.lima/default/diffdisk",
+            "/Users/t/.local/share/containers/podman/machine/disk.raw",
+            "/Users/t/Library/Application Support/rancher-desktop/lima/0/diffdisk",
+        ] {
+            assert!(is_denied(Path::new(p), &home), "{p}");
+        }
+        assert!(!is_denied(Path::new("/Users/t/Library/Group Containers/group.com.apple.notes/x"), &home));
+        assert!(!is_denied(Path::new("/Users/t/Library/Containers/com.apple.Safari/Data"), &home));
         assert!(is_denied(Path::new("/Users/t/.claude/projects/-Users-t/memory/MEMORY.md"), &home));
         assert!(!is_denied(Path::new("/Users/t/.claude/projects/-Users-t/abc.jsonl"), &home));
         assert!(!is_denied(Path::new("/Users/t/.claude/projects/-Users-t/memory.jsonl"), &home));

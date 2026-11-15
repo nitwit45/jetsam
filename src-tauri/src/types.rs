@@ -18,18 +18,17 @@ pub enum Mode {
     Light,
     Standard,
     Deep,
-    #[serde(alias = "nuke")]
     Full,
 }
 
 impl Mode {
-    /// Parses the wire name. "nuke" is the pre-rename spelling of `Full` and still accepted.
+    /// Parses the wire name.
     pub fn parse(s: &str) -> Option<Mode> {
         match s {
             "light" => Some(Mode::Light),
             "standard" => Some(Mode::Standard),
             "deep" => Some(Mode::Deep),
-            "full" | "nuke" => Some(Mode::Full),
+            "full" => Some(Mode::Full),
             _ => None,
         }
     }
@@ -194,6 +193,17 @@ pub struct FreshenResult {
     pub message: String,
 }
 
+/// What Undo would put back right now from the most recent batch in the ops log.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LastBatch {
+    /// When the batch ran, in seconds since the epoch.
+    pub ts: i64,
+    /// Items still in the Trash where they landed, with nothing at their original path.
+    pub restorable: usize,
+    pub bytes: u64,
+}
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UndoResult {
@@ -263,12 +273,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn mode_parses_wire_names_and_legacy_alias() {
+    fn mode_parses_wire_names() {
         assert_eq!(Mode::parse("light"), Some(Mode::Light));
         assert_eq!(Mode::parse("standard"), Some(Mode::Standard));
         assert_eq!(Mode::parse("deep"), Some(Mode::Deep));
         assert_eq!(Mode::parse("full"), Some(Mode::Full));
-        assert_eq!(Mode::parse("nuke"), Some(Mode::Full), "pre-rename spelling still works");
         assert_eq!(Mode::parse("Full"), None, "names are case-sensitive");
         assert_eq!(Mode::parse(""), None);
     }
@@ -278,10 +287,9 @@ mod tests {
         for m in [Mode::Light, Mode::Standard, Mode::Deep, Mode::Full] {
             assert_eq!(Mode::parse(m.as_str()), Some(m));
         }
-        assert_eq!(Mode::Full.as_str(), "full", "the wire name is never the alias");
         assert!(Mode::Light < Mode::Standard && Mode::Standard < Mode::Deep && Mode::Deep < Mode::Full);
         assert_eq!(serde_json::to_string(&Mode::Full).unwrap(), "\"full\"");
-        assert_eq!(serde_json::from_str::<Mode>("\"nuke\"").unwrap(), Mode::Full);
+        assert_eq!(serde_json::from_str::<Mode>("\"full\"").unwrap(), Mode::Full);
     }
 
     #[test]

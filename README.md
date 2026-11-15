@@ -74,7 +74,7 @@ A project is active when its newest commit or git index write is under 14 days o
 
 ### Aged files
 
-**Aged Files** lists files in your home folder of 250 MB or more that you have not opened in 90 days (adjustable), by Spotlight's last-used date. It walks the whole home folder, `~/Library` and hidden folders included, so a row can be application data or a virtual machine or Docker disk image, and trashing a disk image takes the volumes inside it. Nothing is preselected, and a row's Trash button moves that file at once.
+**Aged Files** lists files in your home folder of 250 MB or more that you have not opened in 90 days (adjustable), by Spotlight's last-used date. It walks the whole home folder, `~/Library` and hidden folders included, so a row can be application data or a virtual machine disk image. The deny-list applies here too, and it keeps the data of Docker Desktop, OrbStack, Colima, Lima, Podman and Rancher Desktop out of the list. Nothing is preselected, and a row's Trash button moves that file at once.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/img/aged-dark.png">
@@ -83,7 +83,7 @@ A project is active when its newest commit or git index write is under 14 days o
 
 ### Memory
 
-**Memory** samples every process every 10 seconds and labels it orphan, leak, idle, headless browser, virtual machine or protected. **Reclaim now** ends the orphans, then flushes the file cache. An orphan is a script runtime (`node`, `bun`, `python`, `ruby`, `java`), a JavaScript build tool or an editor helper whose parent exited while Jetsam was open. A job you started with `nohup` and left running after closing its terminal matches, so check the rows labelled orphan before you press it. Other unprotected processes you tick are ended after a confirmation: SIGTERM, then SIGKILL if still running 3 seconds later. Soft restart quits and reopens Chrome, VS Code or Cursor, and refuses while a Claude Code agent runs in the editor. Thresholds are in [docs/memory.md](docs/memory.md).
+**Memory** samples every process every 10 seconds and labels it orphan, leak, idle, headless browser, virtual machine or protected. **Reclaim now** ends the orphans, then flushes the file cache. An orphan is a script runtime (`node`, `bun`, `python`, `ruby`, `java`), a JavaScript build tool or an editor helper whose parent exited while Jetsam was open. A job started from a terminal window is never an orphan, so one you left running with `nohup` outlives its window. Other unprotected processes you tick are ended after a confirmation: SIGTERM, then SIGKILL if still running 3 seconds later. Soft restart quits and reopens Chrome, VS Code or Cursor, and refuses while a Claude Code agent runs in the editor. Thresholds are in [docs/memory.md](docs/memory.md).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/img/memory-dark.png">
@@ -110,13 +110,13 @@ A project is active when its newest commit or git index write is under 14 days o
 Jetsam deletes files and ends processes. The rules below are what limits it.
 
 - In the app, every item is listed with its path and size before it can be removed, and unticking a row keeps it. The weekly job and `--headless` remove what a scan would preselect without asking, and skip anything marked for review.
-- Files go to the Trash. When every item in a clean succeeds, the toast offers **Undo** for 12 seconds, which puts back what that clean sent to your home Trash. After that, or after a clean that left items behind, use Finder's **Put Back**. Permanent: the **Permanent** switch, which needs you to type `delete`; `brew cleanup` and the Docker prunes; `git worktree prune` after a worktree is removed; and Freshen's snapshot thinning.
+- Files go to the Trash. **Undo** puts back what the most recent clean sent to your home Trash: from the toast right after the clean, or from **Undo last clean** on Overview for as long as those items are still in the Trash. Finder's **Put Back** works too. Permanent: the **Permanent** switch, which needs you to type `delete`; `brew cleanup` and the Docker prunes; `git worktree prune` after a worktree is removed; and Freshen's snapshot thinning.
 - If the Trash refuses an item, it stays put. A permanent delete is offered behind the same typed confirmation, never run on its own.
 - Each path is checked again right before removal and skipped if it changed since the scan.
 - Git-tracked files are skipped, even inside a build folder, and a git failure counts as tracked. A folder with `.git` directly inside it is never removed, except a stale worktree.
 - `build`, `dist` and similar names count only inside a git repo or next to a project file such as `package.json`. `target` needs a `Cargo.toml` beside it.
 - A worktree goes only when it is under `.claude/worktrees/`, has no uncommitted or ignored files other than build output, has no commits outside `main` or `master`, has seen no git activity for 24 hours, and no process works inside it.
-- Never touched (the deny-list): Keychains, Mail, Messages, Photos libraries, iCloud Drive, iPhone backups, `~/.ssh`, `~/.gnupg`, `~/.aws`, `~/.kube`, `~/.docker`, Claude Code memory and the system folders. Docker volumes and containers are never pruned. The full list is in [docs/modes.md](docs/modes.md#never-reachable).
+- Never touched (the deny-list): Keychains, Mail, Messages, Photos libraries, iCloud Drive, iPhone backups, `~/.ssh`, `~/.gnupg`, `~/.aws`, `~/.kube`, `~/.docker`, container engine data, Claude Code memory and the system folders. Docker volumes and containers are never pruned. The full list is in [docs/modes.md](docs/modes.md#never-reachable).
 - Memory triage never ends a running Claude Code agent, anything it started, the terminal or editor hosting it, the app you were last using and its helpers, Jetsam itself, or [macOS processes](docs/memory.md#protected). Virtual machines are only labelled.
 - Every clean is logged to `~/Library/Application Support/Jetsam/ops.log`, one JSON line per item.
 

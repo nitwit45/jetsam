@@ -248,23 +248,8 @@ pub fn reveal(path: &str) -> Result<(), String> {
 
 const LAUNCH_LABEL: &str = "com.nith.jetsam.weekly";
 
-/// The label builds before the rename installed the weekly job under.
-const LEGACY_LAUNCH_LABEL: &str = "com.fresh.weekly";
-
 fn launch_agent_path(home: &Path) -> PathBuf {
     home.join("Library/LaunchAgents").join(format!("{LAUNCH_LABEL}.plist"))
-}
-
-/// Unload and delete the pre-rename weekly job if it is still installed. It points at a
-/// binary that no longer exists, so leaving it would only fail every Sunday.
-pub fn remove_legacy_launch_agent(home: &Path) {
-    let plist = home.join("Library/LaunchAgents").join(format!("{LEGACY_LAUNCH_LABEL}.plist"));
-    if !plist.exists() {
-        return;
-    }
-    let domain = format!("gui/{}", real_uid());
-    let _ = run_cmd("launchctl", &["bootout", &domain, &plist.to_string_lossy()]);
-    let _ = std::fs::remove_file(&plist);
 }
 
 pub fn launch_agent_plist(binary: &Path, mode: &str, log: &Path) -> String {
@@ -306,7 +291,6 @@ pub fn schedule(enabled: bool, mode: &str) -> Result<bool, String> {
         return Err(format!("scheduled runs are light or standard only, not {}", mode.as_str()));
     }
     let home = rules::home();
-    remove_legacy_launch_agent(&home);
     let plist = launch_agent_path(&home);
     let domain = format!("gui/{}", real_uid());
     let _ = run_cmd("launchctl", &["bootout", &domain, &plist.to_string_lossy()]);
@@ -385,7 +369,7 @@ mod tests {
 
     #[test]
     fn schedule_refuses_deep_modes() {
-        for m in ["deep", "full", "nuke"] {
+        for m in ["deep", "full"] {
             let err = schedule(true, m).unwrap_err();
             assert!(err.contains("light or standard"), "{m}: {err}");
         }

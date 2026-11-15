@@ -43,6 +43,7 @@ All of these must hold:
 - its parent is now launchd (ppid 1)
 - some earlier sample saw it with a real parent, so it was handed to launchd after it started. A process that was launchd's child from the first sample is never an orphan.
 - it is not a launchd job (`launchctl list`), such as a LaunchAgent or a `brew services` daemon
+- no sample saw it as the child of a shell in a terminal window. A job you start in a terminal and leave running, with `nohup` or without, is yours and is never an orphan. A shell started with `-c` and no terminal, which is how coding agents and editors run commands, does not count, so what they leave behind still does.
 - its name starts with one of: `node`, `tsserver`, `esbuild`, `vite`, `next-server`, `bun`, `python`, `ruby`, `java`, `code helper`, `cursor helper` (case is ignored)
 - it is not protected
 

@@ -1,5 +1,13 @@
 import { createContext, useContext } from "react";
-import type { CleanFailureDetail, CleanProgress, ScanMode, ScanProgress, ScanResult, ScheduleMode } from "./types";
+import type {
+  CleanFailureDetail,
+  CleanProgress,
+  LastBatch,
+  ScanMode,
+  ScanProgress,
+  ScanResult,
+  ScheduleMode,
+} from "./types";
 import type { Page } from "./lib/pages";
 
 export interface Settings {
@@ -15,7 +23,11 @@ export interface Toast {
   id: number;
   text: string;
   kind?: "info" | "error" | "success";
-  action?: { label: string; run: () => void };
+  actions?: ToastAction[];
+}
+export interface ToastAction {
+  label: string;
+  run: () => void;
 }
 
 export interface Store {
@@ -45,8 +57,11 @@ export interface Store {
   toasts: Toast[];
   pushToast: (t: Omit<Toast, "id">) => number;
   dismissToast: (id: number) => void;
-  /** Shows a success toast with Undo, replacing any older Undo toast, since Undo only reaches the newest batch. */
-  offerUndo: (text: string) => void;
+  /** Shows a toast with Undo, replacing any older Undo toast, since Undo only reaches the newest batch. */
+  offerUndo: (text: string, more?: Pick<Toast, "kind" | "actions">) => void;
+  /** What Undo would put back right now. Null until the first clean. */
+  undoable: LastBatch | null;
+  undoLast: () => Promise<void>;
   /** Hides the current Undo toast; call before any other clean so Undo cannot reach the wrong batch. */
   retireUndo: () => void;
   cleanFailures: CleanFailureDetail[] | null;

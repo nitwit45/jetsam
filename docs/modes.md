@@ -99,6 +99,7 @@ These are refused by `rules::is_denied` in every mode, at scan time and again at
 
 - `~/Library/Keychains`, `~/Library/Mail`, `~/Library/Messages`, `~/Library/Mobile Documents` (iCloud Drive), `~/Library/Application Support/MobileSync` (device backups)
 - `~/.ssh`, `~/.gnupg`, `~/.aws`, `~/.kube`, `~/.docker`
+- Container engine data, whose disk images hold the volumes: `~/Library/Containers/com.docker.docker`, `~/Library/Group Containers/group.com.docker`, any `~/Library/Group Containers/*.dev.orbstack`, `~/.orbstack`, `~/.colima`, `~/.lima`, `~/.local/share/containers` and `~/Library/Application Support/rancher-desktop`
 - `/System`, `/usr`, `/bin`, `/sbin`, `/private/var/db`
 - Any path with a `.git` component
 - Any path inside a `.photoslibrary`
