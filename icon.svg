@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1a2330"/>
+      <stop offset="1" stop-color="#0d131b"/>
+    </linearGradient>
+    <linearGradient id="teal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5eead4"/>
+      <stop offset="1" stop-color="#14b8a6"/>
+    </linearGradient>
+  </defs>
+  <rect x="64" y="64" width="896" height="896" rx="200" fill="url(#bg)"/>
+  <!-- the disk: a dim ring with one segment missing -->
+  <path d="M 803.3 532.4 A 292 292 0 1 1 348.7 269.9" fill="none" stroke="#0f6e66" stroke-width="80" stroke-linecap="round"/>
+  <!-- the segment that was freed, in bright teal -->
+  <path d="M 461.3 224.4 A 292 292 0 0 1 786.4 412.1" fill="none" stroke="url(#teal)" stroke-width="80" stroke-linecap="round"/>
+  <!-- what remains: one clean dot -->
+  <circle cx="512" cy="512" r="92" fill="url(#teal)"/>
+</svg>
